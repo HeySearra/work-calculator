@@ -1,0 +1,688 @@
+<!doctype html>
+<html lang="zh-CN" data-page-node-id="FCFrFFFuW83hDKVlfmnBt7">
+<head data-page-node-id="hqZRfULijAj67XbTypRwBK">
+<meta charset="utf-8" data-page-node-id="zfyfGc1LFiRH3kBTWTRGMR">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" data-page-node-id="iGCnBxCofMU3oh9oKr369H">
+<meta name="theme-color" content="#FAFAF7" data-page-node-id="pD2bk0HlCVcqavvlhim0Qb">
+<title>打工人仪表盘</title>
+<style>
+:root{
+  --bg:#FAFAF7; --surface:#FFFFFF; --surface-2:#F4F2EC; --surface-3:#E0DDD4;
+  --border:rgba(0,0,0,.08); --border-2:rgba(0,0,0,.14);
+  --text:#1A1A1A; --text-2:#6B6B6B; --text-3:#A1A09B;
+  --brand:#E2742B; --brand-bg:#FFF1E5; --brand-2:#B8531A;
+  --up:#D84A4A; --up-bg:#FDECEC; --down:#4F9D2B; --down-bg:#EAF3DE;
+  --info:#2F6BD8; --info-bg:#E6EEFB;
+  --purple:#6E5BD4; --purple-bg:#EEEDFE;
+  --teal:#1D9E75; --teal-bg:#E1F5EE;
+  --amber:#BA7517; --amber-bg:#FAEEDA;
+  --r-sm:8px; --r-md:12px; --r-lg:16px;
+  --shadow:0 1px 0 rgba(0,0,0,.04),0 0 0 .5px rgba(0,0,0,.04);
+}
+[data-mode="dark"]{
+  --bg:#1A1A1A; --surface:#232323; --surface-2:#2A2A2A; --surface-3:#404040;
+  --border:rgba(255,255,255,.08); --border-2:rgba(255,255,255,.16);
+  --text:#F0EFEA; --text-2:#B0AFA8; --text-3:#78776F;
+  --brand:#F2934E; --brand-bg:#3A2418;
+  --up:#F26F6F; --up-bg:#3A2020; --down:#7CC25E; --down-bg:#1F2E1A;
+  --info:#5B8FE8; --info-bg:#1B2A40;
+  --brand-2:#E69F60;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;font-size:14px;line-height:1.55;font-feature-settings:"tnum"}
+button{font-family:inherit;font-size:14px;color:var(--text);background:transparent;border:.5px solid var(--border-2);border-radius:var(--r-sm);padding:6px 12px;cursor:pointer;transition:all .15s}
+button:hover{background:var(--surface-2)}
+button.primary{background:var(--brand);color:#fff;border-color:var(--brand)}
+button.primary:hover{background:var(--brand-2)}
+button.ghost{border-color:transparent;color:var(--text-2)}
+button.ghost:hover{background:var(--surface-2)}
+button.sm{padding:4px 10px;font-size:13px}
+input,select,textarea{font-family:inherit;font-size:14px;color:var(--text);background:var(--surface);border:.5px solid var(--border-2);border-radius:var(--r-sm);padding:7px 10px;width:100%;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--brand)}
+label{display:block;font-size:13px;color:var(--text-2);margin-bottom:4px}
+a{color:var(--info);text-decoration:none}
+hr{border:none;border-top:.5px solid var(--border);margin:1.25rem 0}
+::selection{background:var(--brand-bg);color:var(--text)}
+
+.app{display:grid;grid-template-columns:208px 1fr;min-height:100vh}
+.sidebar{background:var(--surface);border-right:.5px solid var(--border);padding:16px 12px;display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh;overflow-y:auto}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 8px 16px;font-weight:500;font-size:15px}
+.brand-logo{width:32px;height:32px;border-radius:8px;background:var(--brand-bg);color:var(--brand);display:flex;align-items:center;justify-content:center;font-weight:500;font-size:15px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:var(--text-2);cursor:pointer;font-size:14px;user-select:none;position:relative}
+.nav-item:hover{background:var(--surface-2);color:var(--text)}
+.nav-item.active{background:var(--brand-bg);color:var(--brand-2)}
+.nav-item.active::before{content:"";position:absolute;left:-12px;top:8px;bottom:8px;width:3px;background:var(--brand);border-radius:2px}
+.nav-item .nav-ico{width:18px;height:18px;display:inline-block;flex:none;opacity:.85}
+.sidebar-foot{margin-top:auto;padding:8px 10px;font-size:12px;color:var(--text-3)}
+
+.main{display:flex;flex-direction:column;min-width:0}
+.topbar{display:flex;align-items:center;gap:12px;padding:14px 24px;background:var(--bg);border-bottom:.5px solid var(--border);position:sticky;top:0;z-index:10;backdrop-filter:blur(8px)}
+.crumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-2)}
+.crumb .cur{color:var(--text);font-weight:500;font-size:15px}
+.topbar .spacer{flex:1}
+.topbar .quick{display:flex;gap:8px}
+
+.view{padding:20px 24px 80px;flex:1}
+.view.hidden{display:none}
+.hidden{display:none !important}
+.section-title{font-size:14px;font-weight:500;color:var(--text);margin:0 0 12px}
+.section-sub{font-size:12px;color:var(--text-3);margin-top:-8px;margin-bottom:12px}
+
+.card{background:var(--surface);border:.5px solid var(--border);border-radius:var(--r-md);padding:18px;box-shadow:var(--shadow)}
+.card-title{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500;margin:0 0 12px}
+.card-title .dot{width:8px;height:8px;border-radius:50%;background:var(--text-2)}
+.card-title .ico{width:20px;height:20px;border-radius:6px;background:var(--surface-2);display:inline-flex;align-items:center;justify-content:center;color:var(--text-2);font-size:12px;font-weight:500}
+.card-title .badge{margin-left:auto;font-size:12px;color:var(--text-3);font-weight:400}
+
+.grid{display:grid;gap:14px}
+.g-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+
+.metric{padding:16px;border-radius:var(--r-md);background:var(--surface);border:.5px solid var(--border);box-shadow:var(--shadow);display:flex;flex-direction:column;gap:6px;position:relative}
+.metric .lbl{font-size:13px;color:var(--text-2);display:flex;align-items:center;gap:6px}
+.metric .val{font-size:24px;font-weight:500;letter-spacing:-.01em}
+.metric .sub{font-size:12px;color:var(--text-3)}
+.metric .pill{position:absolute;top:14px;right:14px;font-size:11px;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--text-2)}
+.metric.b .val{font-size:30px}
+.metric.b .lbl{font-size:13px;color:var(--text-2)}
+
+.metric.brand{background:var(--brand-bg);border-color:transparent}
+.metric.brand .val{color:var(--brand-2);font-size:34px}
+.metric.up .val{color:var(--up)}
+.metric.down .val{color:var(--down)}
+.metric.info .val{color:var(--info)}
+.metric.teal .val{color:var(--teal)}
+
+.progress{position:relative;height:14px;background:var(--surface-2);border-radius:7px;overflow:hidden}
+.progress > .fill{position:absolute;left:0;top:0;bottom:0;background:var(--up);border-radius:7px;transition:width .4s}
+.progress > .lunch{position:absolute;top:0;bottom:0;background:rgba(0,0,0,.06)}
+.progress > .extra{position:absolute;top:0;bottom:0;background:var(--amber)}
+.progress-axis{display:flex;justify-content:space-between;font-size:11px;color:var(--text-3);margin-top:6px}
+
+.bar-stack{display:flex;align-items:flex-end;gap:6px;height:160px;padding-bottom:18px;position:relative}
+.bar-stack .axis{position:absolute;left:0;right:0;bottom:0;border-top:.5px solid var(--border-2)}
+.bar{flex:1;background:var(--surface-2);border-radius:3px 3px 0 0;min-height:2px;position:relative;cursor:pointer}
+.bar.up{background:var(--up)}
+.bar.down{background:var(--down)}
+.bar.empty{background:var(--surface-2)}
+.bar-x{position:absolute;bottom:-18px;left:0;right:0;text-align:center;font-size:11px;color:var(--text-3)}
+
+.kv{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.kv-cell{background:var(--surface-2);border-radius:var(--r-sm);padding:12px}
+.kv-cell p{margin:0;font-size:12px;color:var(--text-2)}
+.kv-cell h3{margin:4px 0 0;font-size:18px;font-weight:500}
+.kv-cell h3 .u{color:var(--text-3);font-size:13px;font-weight:400;margin-left:2px}
+
+.row{display:flex;align-items:center;gap:8px}
+.row.between{justify-content:space-between}
+.row.wrap{flex-wrap:wrap}
+.gap-l{margin-top:18px}
+.gap-s{margin-top:8px}
+.muted{color:var(--text-2)}
+.tnum{font-variant-numeric:tabular-nums}
+
+.tag{display:inline-flex;align-items:center;font-size:11px;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--text-2)}
+.tag.brand{background:var(--brand-bg);color:var(--brand-2)}
+.tag.info{background:var(--info-bg);color:var(--info)}
+.tag.up{background:var(--up-bg);color:var(--up)}
+.tag.down{background:var(--down-bg);color:var(--down)}
+.tag.teal{background:var(--teal-bg);color:var(--teal)}
+.tag.purple{background:var(--purple-bg);color:var(--purple)}
+.tag.amber{background:var(--amber-bg);color:var(--amber)}
+
+.list{display:flex;flex-direction:column;gap:8px}
+.list-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:var(--r-sm);background:var(--surface);border:.5px solid var(--border)}
+.list-item:hover{background:var(--surface-2)}
+.list-item .name{font-weight:500}
+.list-item .meta{color:var(--text-3);font-size:12px;margin-left:auto;text-align:right}
+
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.32);z-index:100;display:flex;align-items:flex-end;justify-content:center;padding:0;animation:fadein .2s}
+.modal{background:var(--surface);border-radius:var(--r-lg) var(--r-lg) 0 0;padding:20px;width:100%;max-width:480px;max-height:80vh;overflow-y:auto}
+@media(min-width:768px){.modal-bg{align-items:center;padding:24px}.modal{border-radius:var(--r-lg);max-width:520px}}
+.modal h3{margin:0 0 16px;font-size:15px;font-weight:500}
+.modal .field{margin-bottom:14px}
+.modal .field .row label{margin:0}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+
+.fab{position:fixed;right:20px;bottom:84px;width:48px;height:48px;border-radius:50%;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 6px 16px rgba(226,116,43,.36);cursor:pointer;border:none;z-index:50}
+@media(max-width:768px){.fab{bottom:80px;right:16px}}
+
+.toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%);background:var(--text);color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;z-index:200;animation:pop .25s}
+@keyframes pop{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+
+.tab-bar{display:none}
+@media(max-width:768px){
+  .app{grid-template-columns:1fr}
+  .sidebar{display:none}
+  .topbar{padding:12px 14px}
+  .view{padding:14px 14px 92px}
+  .grid.g-3,.grid.g-4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .metric.b .val{font-size:26px}
+  .metric.brand .val{font-size:28px}
+  .tab-bar{display:flex;position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:.5px solid var(--border);z-index:30;padding:6px 0 calc(6px + env(safe-area-inset-bottom))}
+  .tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 0;color:var(--text-2);font-size:11px;cursor:pointer}
+  .tab.active{color:var(--brand)}
+  .tab .nav-ico{width:18px;height:18px}
+}
+
+.heat-scroll{overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;min-height:96px}
+.heat-grid{display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,12px);grid-auto-columns:12px;gap:2px;min-width:max-content}
+.heat-grid .d{width:12px;height:12px;border-radius:2px;background:var(--surface-2);cursor:pointer}
+.heat-grid .d.month-start{border-left:2px solid var(--text-3)}
+.heat-grid .d.future{background:var(--surface-2);opacity:.35;cursor:default}
+.heat-grid .d.past-empty{background:var(--surface-3)}
+.heat-grid .d.none{background:var(--surface-2);opacity:.55}
+.heat-months{display:grid;gap:2px;margin-bottom:3px;height:13px}
+.heat-months span{font-size:10px;line-height:13px;color:var(--text-2);white-space:nowrap;justify-self:start}
+.heat-grid .d.l1{background:#FEE4DA}
+.heat-grid .d.l2{background:#F5BFA8}
+.heat-grid .d.l3{background:#E2742B}
+.heat-grid .d.l4{background:#B8531A}
+.heat-grid .d.holiday{background:repeating-linear-gradient(45deg,transparent,transparent 2px,var(--surface-2) 2px,var(--surface-2) 3px)}
+/* 上班时长热力图：蓝色系 */
+.heat-grid.hours .d.l1{background:#DCE8FA}
+.heat-grid.hours .d.l2{background:#A9C6F2}
+.heat-grid.hours .d.l3{background:#5B8FE8}
+.heat-grid.hours .d.l4{background:#2F6BD8}
+.heat-grid.hours .d.l5{background:#17408F}
+.heat-grid.hours .d.leave{background:repeating-linear-gradient(45deg,transparent,transparent 2px,#E1D9F8 2px,#E1D9F8 3px)}
+.heat-grid .d.default{opacity:.78}
+.heat-legend .sw.default{background:#5B8FE8;opacity:.78}
+.heat-legend{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-2);flex-wrap:wrap;margin-top:8px}
+.heat-legend .sw{width:12px;height:12px;border-radius:2px;display:inline-block}
+.heat-legend .sw.stripe{background:repeating-linear-gradient(45deg,transparent,transparent 2px,var(--surface-2) 2px,var(--surface-2) 3px)}
+.heat-legend .sw.leave{background:repeating-linear-gradient(45deg,transparent,transparent 2px,#E1D9F8 2px,#E1D9F8 3px)}
+
+.kbd{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;padding:2px 6px;border-radius:4px;border:.5px solid var(--border-2);background:var(--surface-2);color:var(--text-2)}
+
+.empty-state{padding:36px 12px;text-align:center;color:var(--text-3)}
+.empty-state .ic{font-size:24px;margin-bottom:8px;opacity:.5}
+
+.slider-row{display:grid;grid-template-columns:120px 1fr 80px;gap:12px;align-items:center;margin-bottom:10px}
+.slider-row label{margin:0}
+.slider-row .v{text-align:right;font-weight:500}
+
+.dotline{stroke:var(--text-3);stroke-dasharray:3 3;fill:none}
+
+.cell-input{width:100%;padding:4px 2px;text-align:center;font-size:13px;background:transparent;border:.5px solid transparent;border-radius:4px}
+.cell-input:hover{background:var(--surface-2)}
+.cell-input:focus{background:var(--surface);border-color:var(--brand)}
+
+.table{width:100%;border-collapse:collapse;font-size:13px}
+.table th,.table td{padding:8px 10px;text-align:left;border-bottom:.5px solid var(--border)}
+.table th{font-weight:500;color:var(--text-2);font-size:12px}
+.table tr:last-child td{border-bottom:none}
+.table .num{text-align:right;font-variant-numeric:tabular-nums}
+
+.legend{display:flex;gap:14px;font-size:12px;color:var(--text-2);flex-wrap:wrap}
+.legend .sw{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px}
+
+.heatmap-caption{font-size:12px;color:var(--text-3);margin-bottom:6px}
+
+.auto-field{padding:7px 10px;background:var(--surface-2);border:.5px solid var(--border);border-radius:var(--r-sm);font-size:14px;color:var(--text-2);font-variant-numeric:tabular-nums;min-height:33px}
+.field-full{grid-column:1/-1}
+textarea{resize:vertical;line-height:1.6}
+</style>
+</head>
+<body data-page-node-id="KvyH1z4mhNmsaKp7H3krjU">
+<div class="app" data-page-node-id="qPIdaQJRqXuEIwDlF5bvzn">
+  <aside class="sidebar" data-page-node-id="T7of9L0kTsX8jgKbF86W9O">
+    <div class="brand" data-page-node-id="FIbqENC0sbFCys2tqLAutr"><div class="brand-logo" data-page-node-id="H8hYZ6DAzDgUGPDYbh2wso">⏱</div><div data-page-node-id="C0IcUExhRGSFqOEta8rWmm">阿卡 · 打工人仪表盘</div></div>
+    <div class="nav-item" data-route="today" data-page-node-id="f4WgfHEl6bSgjUTCpN7Waj"><span class="nav-ico" data-page-node-id="nOp2ATOPadAVKk0H9Qh9H1">◐</span><span data-page-node-id="F38QuGhq3s11imK4ZEbsEH">今日</span></div>
+    <div class="nav-item" data-route="history" data-page-node-id="5rsHD48Dse7TwCyUaxsd0B"><span class="nav-ico" data-page-node-id="J9i8liKLYp6E6AwwaiWO92">▦</span><span data-page-node-id="lVu5XdwGB3WE0JD8d5Qx8w">历史</span></div>
+    <div class="nav-item" data-route="assets" data-page-node-id="zFRubflAesLzBbXnr0hCWA"><span class="nav-ico" data-page-node-id="Rx3PAJmCxVU5pRiHZ47Anu">◇</span><span data-page-node-id="TMXqHqsvk9F5UCgq9lAsex">资产</span></div>
+    <div class="nav-item" data-route="pension" data-page-node-id="r2bfbF96ukslvfAwB0at9S"><span class="nav-ico" data-page-node-id="Q2ebC6MgSjWo61zSDNOoj2">◯</span><span data-page-node-id="PEZguxWWfoDPFo8uXCITbj">养老</span></div>
+    <div class="nav-item" data-route="fire" data-page-node-id="Bc6Ze53fJmZFCoOqaGqvH7"><span class="nav-ico" data-page-node-id="pdtE9FgXFxE2zT9VU0f2Eo">▣</span><span data-page-node-id="NBBv5BXGrOzVSheaobirjh">FIRE</span></div>
+    <div class="nav-item" data-route="invest" data-page-node-id="fCNrjDVUCBMQm4jKGmvugT"><span class="nav-ico" data-page-node-id="gDqB1EslraZJkhpGdDoSzC">▲</span><span data-page-node-id="gH5hiKm7ZYnvr2d15rfV8y">理财能力</span></div>
+    <div class="nav-item" data-route="settings" data-page-node-id="SEijTRr4CjZGDXUxMQqz2S"><span class="nav-ico" data-page-node-id="yRdHe1J3ofqCWRMvQGVCFa">⚙</span><span data-page-node-id="l0k10vNI4C3KqGyCI3PL9j">设置</span></div>
+    <div class="sidebar-foot" data-page-node-id="vRj5MFfGeptxJoYNXkN7Xx">v0.1 · 本地存储 · 不上云</div>
+  </aside>
+  <main class="main" data-page-node-id="4onYwsQYFuGCaDWxqVKmuB">
+    <div class="topbar" data-page-node-id="5EpnHm8S5paVkZb3k1gy0U">
+      <div class="crumb" data-page-node-id="MRPhKnDptlKli8pf1KU9Bw">
+        <span class="cur" id="pageTitle" data-page-node-id="ryDqFRA31EgdgyNHJiXQCG">今日</span>
+        <span class="muted" id="pageDate" data-page-node-id="NtyWzym6dAt7mgY5ytngoP"></span>
+      </div>
+      <div class="spacer" data-page-node-id="BBWKEPT9rxNwRNnQr8kegR"></div>
+      <div class="quick" data-page-node-id="MPSuSFtCTylL8KHIvrOT7q">
+        <button class="sm ghost" id="btnMode" data-page-node-id="AiTd9vorjcxIrcMaQn3gkj">摸鱼模式</button>
+        <button class="sm" onclick="openSheet('slacker')" data-page-node-id="4tYjpzkZ8PHFlsbMsF3LP6">摸鱼计算器</button>
+        <button class="sm" onclick="openSheet('overtime')" data-page-node-id="k8P1McmKfYAIfMvtydrO2E">加班登记</button>
+      </div>
+    </div>
+
+    <!-- TODAY -->
+    <section class="view" id="view-today" data-page-node-id="mcQ3wBjs3fzWJIoxURrezR">
+      <div class="grid g-4" style="margin-bottom:14px" data-page-node-id="mj6Tb0PRzhjP0l8Q1dRz47">
+        <div class="metric brand b" data-page-node-id="HU4YIe6LMvnq7hI1jwBOXj">
+          <div class="lbl" data-page-node-id="LUAKbPzgaquxpr5HKQwWfY">今日已赚</div>
+          <div class="val tnum" id="td-money" data-page-node-id="HhKl5Bwtj8FdDZ9tgi9tCi">¥ 0.00</div>
+          <div class="sub" data-page-node-id="qRJ7cEisWS1kb4aLtsWH4z">时薪 ¥<span id="td-rate" data-page-node-id="AaKwvrRtyHS6xUyhcRAzvh">0</span> · 目标 ¥<span id="td-target" data-page-node-id="UseYU1QQCwpY73D62rqtgk">0</span></div>
+        </div>
+        <div class="metric b" data-page-node-id="XcvZGdhUNA25NahgvdOPiR">
+          <div class="lbl" id="td-left-lbl" data-page-node-id="kdiQQ3CeOJC4GBjN0m7UiX">还有多久下班</div>
+          <div class="val tnum" id="td-left" data-page-node-id="vEyAznkb0wf5KNwbOS0yAU">—</div>
+          <div class="sub" id="td-stage" data-page-node-id="zkGQGcYiyXI1juKCDzzE2a">尚未开始</div>
+        </div>
+        <div class="metric b" data-page-node-id="RAnbNf2T2blB80Wvb0K4s5">
+          <div class="lbl" data-page-node-id="9cTmt3iqVMCET6bEjg63cQ">今日还剩没赚到</div>
+          <div class="val tnum" id="td-rest" data-page-node-id="s99GAF5hrkTlsIlW8buO63">¥ 0.00</div>
+          <div class="sub" data-page-node-id="VsEAiDHpsgMLrwMA8SBVaT">占今日目标 <span id="td-rest-pct" data-page-node-id="8PRWDOhN6kB5HEz42G51pi">0%</span></div>
+        </div>
+        <div class="metric b teal" data-page-node-id="TH6GRPDxHFbSERW89FJuNE">
+          <div class="lbl" data-page-node-id="F98XniynAjgNzg7FsaTjmv">距发工资</div>
+          <div class="val tnum" id="td-pdays" data-page-node-id="hma1kdzNWv65vsa8G5d8nk">—</div>
+          <div class="sub" id="td-pdate" data-page-node-id="YQXnHeuXTvMDGJqkgsqQyH">—</div>
+        </div>
+      </div>
+
+      <div class="card gap-l" style="margin-bottom:14px" data-page-node-id="BHccldXLbwwFLf9xWWsnLF">
+        <div class="card-title" data-page-node-id="xdpwuqnKJ4kzAXPFYHywPQ"><span class="ico" data-page-node-id="ZJiQNDzzr6rkZ8Z3f67jdM">▤</span>今日进度<span class="badge" id="td-pct" data-page-node-id="tlFJPcjlouBZS6qeQhyTqy">0%</span></div>
+        <div class="progress" id="td-bar" data-page-node-id="eEEsG1lIu4aHnFMaifxouP"><div class="lunch" id="td-lunch" data-page-node-id="3QKTbpHfSIwjGlEJHQWP5u"></div><div class="fill" id="td-fill" data-page-node-id="6fBAIoXLiFony4zD8cu3Il"></div></div>
+        <div class="progress-axis" id="td-axis" data-page-node-id="lwXCU2AcsIMs4IAohnmLl4"></div>
+      </div>
+
+      <div class="grid g-3" data-page-node-id="L68DYokMt5zf0uyBFpfekk">
+        <div class="card" data-page-node-id="3m0u40jvZYtu0EYLZEdT8v">
+          <div class="card-title" data-page-node-id="pkxrhA8IJrkQTLmksmbsI9"><span class="ico" data-page-node-id="CPO6UGxLzV8Eivd2mj67nR">⏱</span>发工资进度<span class="badge" data-page-node-id="GLHo96Goj38J7JUWEsnyoL">本薪资周期</span></div>
+          <p class="muted" style="font-size:13px;margin:0 0 8px" data-page-node-id="AjBD2IWwOptlxBXZYFyhUS">这笔 <b id="td-pay-amt" style="color:var(--text)" data-page-node-id="KccOJqkR9QlXshzxmR4jg2">¥13,500</b> 你已经赚到 <b id="td-pay-pct" style="color:var(--brand-2)" data-page-node-id="tIyEDxk1Vkjd0oFqDJY6Sy">0%</b></p>
+          <div class="progress" data-page-node-id="SJVpgtlUwub4bsVZoOkUfc"><div class="fill" id="td-pay-fill" style="background:var(--brand)" data-page-node-id="YQaex8Us1kXoELVPAyPO9R"></div></div>
+          <p class="muted" style="font-size:12px;margin:8px 0 0" data-page-node-id="3GqgUEymYa2aZJIiGpZltQ">已过 <span id="td-pay-pass" data-page-node-id="A3UKLqYDWrqcyYSCXcXUk6">—</span> / <span id="td-pay-total" data-page-node-id="d6ABSFnGUt5qgxTnVWbgi5">—</span> 天 · 预计到账 <b id="td-pay-earned" style="color:var(--text)" data-page-node-id="qLksNiFeV953O28UoHCCiM">—</b></p>
+          <div class="row gap-s" data-page-node-id="gdxESXKVpOn3hHYZlt52ph">
+            <button class="sm" onclick="openSheet('payday')" data-page-node-id="eI5JdLRD6riy271QkVFWZ0">发薪日设置</button>
+            <button class="sm ghost" onclick="openSheet('paylog')" data-page-node-id="hJN3PJdjF3YVflTdnHUL07">工资日历 ↗</button>
+          </div>
+        </div>
+        <div class="card" data-page-node-id="tlsIY4HwBPd2IBrS4KhvBE">
+          <div class="card-title" data-page-node-id="WKiWGtKAcCDsNeeNqZ6aCv"><span class="ico" data-page-node-id="dvoAWyF2KoXb4SeaqpfTmb">▤</span>本周 / 本月<span class="badge" id="td-mtd" data-page-node-id="o7LMAie8z1GMSSnQFQjKqR">—</span></div>
+          <div class="kv" data-page-node-id="RGYzaiY5NJwpnOa5rtFU6m">
+            <div class="kv-cell" data-page-node-id="Dc3ZYIrgcCc9bGMi9vgg1y"><p data-page-node-id="FTDgEC6hj1INMWTc1LJoE6">本周进度</p><h3 class="tnum" data-page-node-id="Ofj675thHIRcBMuFMFfpwt"><span id="td-week" data-page-node-id="o3BpNaHBe1xFAC8rJamXMm">0</span><span class="u" data-page-node-id="JIUHik9A20kxm7KkBg2uGK">/5 天</span></h3></div>
+            <div class="kv-cell" data-page-node-id="Dj34XxB9FSOFdE4aq82l1a"><p data-page-node-id="VPuHzpLg07EmFd8H73VnA9">本月已赚</p><h3 class="tnum" data-page-node-id="6F0sNquxAkqaoUdp8CltXT">¥<span id="td-month" data-page-node-id="oGPeJImgY6WAw9vcewtNIN">0</span></h3></div>
+            <div class="kv-cell" data-page-node-id="fUE6bXweEaVCK8PdVeAj4K"><p data-page-node-id="ThKI57XAHSdYNOX4HOKePh">距下个假期</p><h3 class="tnum" data-page-node-id="XsMCkkAQKcRaI3QrwCe3Qc"><span id="td-holiday" data-page-node-id="rEeRib76ac8vKrhSnfgTVS">—</span></h3></div>
+          </div>
+          <div class="row between gap-s" style="margin-top:12px">
+            <span class="muted" style="font-size:12px" id="td-punch">今日未打卡</span>
+            <button class="sm ghost" onclick="openPunch(todayKey())">打卡 ↗</button>
+          </div>
+        </div>
+        <div class="card" data-page-node-id="T58OYlyh9hxH7NG97ebeud">
+          <div class="card-title" data-page-node-id="mxFqlzSGbkWKoadAV3TkjR"><span class="ico" data-page-node-id="DDdVmvCSGKzLSgqyVx09t9">⚑</span>里程碑</div>
+          <div class="list" id="td-milestones" data-page-node-id="Z8hCH5ZygIRCAlXcSiCr0A"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HISTORY -->
+    <section class="view hidden" id="view-history" data-page-node-id="cHP97mwuqmfUFQOzeMqV8D">
+      <div class="grid g-4" style="margin-bottom:14px" data-page-node-id="Ve3ljX6SBxCyX4lRAYADzb">
+        <div class="metric b" data-page-node-id="dFqI3fculRTS6hNVW4cMoo"><div class="lbl" data-page-node-id="3rNvOOxD1zWJVuUCT6YArI">累计打工</div><div class="val tnum" data-page-node-id="Gy9atPNbb6UEWkOImQ4G0H"><span id="hi-days" data-page-node-id="40ZPFsqAaTJpQWu2yQUWXH">—</span><span class="u" data-page-node-id="1dan2eqdYp5tHjw64c56iO">天</span></div></div>
+        <div class="metric b up" data-page-node-id="HMD40GbBBAsJS5MeZtJ2Ya"><div class="lbl" data-page-node-id="SCtxslif41KM3n7K66MyI6">累计赚取</div><div class="val tnum" id="hi-earn" data-page-node-id="u0O9znkDXIcVa5LRY5IBUD">—</div></div>
+        <div class="metric b" data-page-node-id="VP0hFso0VEgMmFffIriMen"><div class="lbl" data-page-node-id="wyM8qWIlZKuOHy4DNDf4f7">当前公司服役</div><div class="val tnum" data-page-node-id="V9jfgvugBpCNgjGMAHn5oi"><span id="hi-company" data-page-node-id="ZoSXDoY044N8BlAJrnKz22">—</span><span class="u" data-page-node-id="a06oprdHMPKZFVrrwHKysq">天</span></div></div>
+        <div class="metric b teal" data-page-node-id="9YhYhs583tItNRiAkvrDn3"><div class="lbl" data-page-node-id="MQODMkP6AG6Q9JSIFdObiu">年假余额</div><div class="val tnum" data-page-node-id="g474QB5IwYGo48fH1AsB06"><span id="hi-leave" data-page-node-id="GLUAut6DlKurAaK3NfcoEv">—</span><span class="u" data-page-node-id="LjH2ehCAYbwqLqZnWZXHqG">天</span></div></div>
+      </div>
+      <div class="card" data-page-node-id="MxOP14xmFIjDV7YnKpltiM">
+        <div class="card-title" data-page-node-id="JkoUyENLNwPIZQvVWDGaHT"><span class="ico" data-page-node-id="F8D2J5A7MUZ6AfFlDRkzgH">▦</span>打工日历热力图<span class="badge" style="margin-left:auto" data-page-node-id="IJxK60NA5WyF50diX9dTTI"><select id="hi-year" style="width:auto;padding:4px 8px;font-size:12px" onchange="HI_YEAR=+this.value;renderHistory()"></select></span></div>
+        <p class="heatmap-caption" data-page-node-id="iecJ559rE13aJo22dpfMDG">颜色深浅 = 当日实际收入 · 灰斜纹 = 休息</p>
+        <div class="heat-scroll" data-page-node-id="hs-wrap"><div class="heat-months" id="hi-months"></div><div class="heat-grid" id="hi-heat" data-page-node-id="rRflwQFAjZJ6huzR1jXxnz"></div></div>
+        <div class="row gap-s muted" style="font-size:12px;margin-top:8px" data-page-node-id="CQVzeXNC0dOKsY5XsfV3is">少 <span style="width:10px;height:10px;background:var(--surface-2);border-radius:2px" data-page-node-id="MqxwXfOgaGA0aQXzsGY2Rv"></span><span style="width:10px;height:10px;background:#FEE4DA;border-radius:2px" data-page-node-id="6eje32y7PW13qTGAIMAk0Z"></span><span style="width:10px;height:10px;background:#F5BFA8;border-radius:2px" data-page-node-id="gv416YuAPFyPrPCcEgKirG"></span><span style="width:10px;height:10px;background:#E2742B;border-radius:2px" data-page-node-id="wc0EShQNncIex0MTp9HmEG"></span><span style="width:10px;height:10px;background:#B8531A;border-radius:2px" data-page-node-id="3n7CsyL1sFAqDETdLLJCnX"></span> 多</div>
+      </div>
+
+      <div class="card gap-l">
+        <div class="card-title">
+          <span class="ico">◷</span>上班时长热力图
+          <span class="badge">打卡 <span id="at-count">0</span> 天</span>
+          <span style="margin-left:auto">
+            <select id="at-year" style="width:auto;padding:4px 8px;font-size:12px" onchange="AT_YEAR=+this.value;renderHistory()"></select>
+          </span>
+        </div>
+        <div class="grid g-4" style="margin-bottom:14px">
+          <div class="metric b info"><div class="lbl">平均在司</div><div class="val tnum"><span id="at-avg">—</span><span class="u">时</span></div><div class="sub">规定 <span id="at-std">8</span> 小时/天</div></div>
+          <div class="metric b up"><div class="lbl">累计加班</div><div class="val tnum"><span id="at-ot">—</span><span class="u">时</span></div><div class="sub">≈ <span id="at-ot-day">—</span> 个工作日白干</div></div>
+          <div class="metric b"><div class="lbl">迟到 / 早退</div><div class="val tnum"><span id="at-late">—</span><span class="u">次</span></div><div class="sub">晚于 <span id="at-start">09:00</span> 即迟到</div></div>
+          <div class="metric b teal"><div class="lbl">最晚下班</div><div class="val tnum" id="at-latest">—</div><div class="sub" id="at-latest-d">—</div></div>
+        </div>
+        <p class="heatmap-caption" id="at-caption">颜色深浅 = 实际在司时长（已扣午休）· 点格子可补录 / 修改</p>
+        <div class="heat-scroll"><div class="heat-months" id="at-months"></div><div class="heat-grid hours" id="at-heat"></div></div>
+        <div class="heat-legend">
+          <span>短</span>
+          <span class="sw" style="background:#DCE8FA"></span>
+          <span class="sw" style="background:#A9C6F2"></span>
+          <span class="sw" style="background:#5B8FE8"></span>
+          <span class="sw" style="background:#2F6BD8"></span>
+          <span class="sw" style="background:#17408F"></span>
+          <span>长</span>
+          <span style="margin-left:12px"><span class="sw stripe"></span>周末 / 节假日</span>
+          <span><span class="sw leave"></span>请假</span>
+          <span><span class="sw default"></span>未打卡（默认作息）</span>
+          <span><span class="sw" style="background:var(--surface-3)"></span>未打卡（视为没上班）</span>
+        </div>
+        <div class="row gap-s" style="margin-top:12px">
+          <button class="sm" onclick="openPunch(todayKey())">记录今日打卡</button>
+          <button class="sm ghost" onclick="genDemoPunch()">生成示例</button>
+          <button class="sm ghost" onclick="clearPunch()">清空</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ASSETS -->
+    <section class="view hidden" id="view-assets" data-page-node-id="snw8pYecT8u7UZxqj6EnLI">
+      <div class="grid g-3" style="margin-bottom:14px" data-page-node-id="QvDqFbFnYR3xrOJGaXwMUn">
+        <div class="metric brand b" data-page-node-id="kyz7roYDgTL3nOMJDHeYBb"><div class="lbl" data-page-node-id="bzeu4Z2sjvGVQkNO6gsfGV">净资产</div><div class="val tnum" id="as-net" data-page-node-id="xXAJYeKWXLKLcvEXsgBCV6">¥0</div><div class="sub" id="as-net-month" data-page-node-id="FwBRyXzQOMnjhYHWumooNM">—</div></div>
+        <div class="metric b up" data-page-node-id="MpAvQJU8hlRw7RiwmgCLv3"><div class="lbl" data-page-node-id="ZSh5GSwnMxpKrmiWbi64E3">总资产</div><div class="val tnum" id="as-assets" data-page-node-id="S4vo8E8g1wzW5ESJpTHcsT">¥0</div></div>
+        <div class="metric b down" data-page-node-id="RTRULM3VGdF51TCWvENquB"><div class="lbl" data-page-node-id="d8jDEcqfqxZXDWK73bIc3V">总负债</div><div class="val tnum" id="as-liab" data-page-node-id="CYFEIkeDhZQ4GFrfkX8FcX">¥0</div></div>
+      </div>
+
+      <div class="card gap-l" data-page-node-id="bBfGRYggEexCpX1kgF3fHZ">
+        <div class="card-title" data-page-node-id="FNnqdi29CAYU9THUgF3QwD"><span class="ico" data-page-node-id="f3zbCONK1OO4uJFTYj0nUg">▤</span>净资产趋势<span class="badge" data-page-node-id="5r2qaHFIifYYCow8j6J8yD">近 12 个月</span></div>
+        <svg id="as-trend" viewBox="0 0 680 200" width="100%" data-page-node-id="Pzhd5SJuuQoymDXFBhtQLe"></svg>
+      </div>
+
+      <div class="grid g-2 gap-l" data-page-node-id="8HWBQ02bhqCpQjD4lPCqAH">
+        <div class="card" data-page-node-id="kYGaZMQwVdNtgp0MabAP06">
+          <div class="card-title" data-page-node-id="aQk8Gpf8MJwJg8VAmbeZGm"><span class="ico" data-page-node-id="zlcDEBPwd0jbJBi6s8EcTQ">▲</span>资产</div>
+          <div class="list" id="as-asset-list" data-page-node-id="SRn7i8GipTfnth2FGIzDSf"></div>
+        </div>
+        <div class="card" data-page-node-id="g7AQtWMOuxZ0lzjEgJwSKV">
+          <div class="card-title" data-page-node-id="u89xXb6CEgnQTvv5pf5P0U"><span class="ico" data-page-node-id="sA21JRFnZUwWwk0lefVKLB">▼</span>负债</div>
+          <div class="list" id="as-debt-list" data-page-node-id="DavFcd2kNNsqZrAXnC3YMI"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PENSION -->
+    <section class="view hidden" id="view-pension" data-page-node-id="freQ3bdtXDmrOIsLyPLMhm">
+      <div class="grid g-2" style="margin-bottom:14px" data-page-node-id="BX45EefBlwzVs61MpBJbjt">
+        <div class="card" data-page-node-id="fxPkNNtDLZXX4Kao8rHbHI">
+          <div class="card-title" data-page-node-id="ZlwnGD9YBODIkIdLsTYvNB"><span class="ico" data-page-node-id="KkSH2XciwV05zWT1DcerDL">◯</span>缴费进度</div>
+          <div class="kv" data-page-node-id="8c1J3N8QoCDCIivOLcyThe">
+            <div class="kv-cell" data-page-node-id="qJsKy318YGFo6FxF7WNnhU"><p data-page-node-id="NRazmhvxNYKZazFUIZCunJ">已缴</p><h3 class="tnum" data-page-node-id="shAXNiB2G6Z89SCHqscfWI"><span id="pn-paid" data-page-node-id="We1uh1HBYFTUqjdLuRl8cq">0</span><span class="u" data-page-node-id="Vg82l4LMKqJ7f42no4df3F">年</span></h3></div>
+            <div class="kv-cell" data-page-node-id="NwKfRgeMN7cvjf8Fra3LRo"><p data-page-node-id="EQCKaRpxRFnmMhuYQNb9Mo">距 15 年还差</p><h3 class="tnum" data-page-node-id="nBCEaBlVHCmcu13adARASy"><span id="pn-min" data-page-node-id="ILTVMg8h39KYqecBxrg9VQ">0</span><span class="u" data-page-node-id="ahpkTOB8RfFllYK2xPVQAU">年</span></h3></div>
+            <div class="kv-cell" data-page-node-id="q5qv76MHQv1Eeeyae57wI1"><p data-page-node-id="E0LphOs9fArElBtKZFcrId">距退休还差</p><h3 class="tnum" data-page-node-id="RI6J6kmcZeBfMe2uozLpAQ"><span id="pn-ret" data-page-node-id="ZDWWoeSEwUqqFE2c9cb1ZP">0</span><span class="u" data-page-node-id="SPM6Baz327gV1d7YyVvhOo">年</span></h3></div>
+          </div>
+          <div class="progress" style="margin-top:14px" data-page-node-id="QjQB2z0pHCQmERfUUbmaVM"><div class="fill" id="pn-bar" style="background:var(--info)" data-page-node-id="Vs1vM5J2k2AiHwgncCKv0J"></div></div>
+          <p class="muted" style="font-size:12px;margin:6px 0 0" data-page-node-id="iHqR1y8eTzvJBOxpqgdL2S">已缴月数 / 最低缴费年限</p>
+        </div>
+        <div class="card" data-page-node-id="eI7iOtUx7go00BIBDhIWx1">
+          <div class="card-title" data-page-node-id="w4hrx0x1B4AvlmXEubkro6"><span class="ico" data-page-node-id="gGOfFltPHxMYjlAJ10eOdI">¥</span>账户余额</div>
+          <div class="kv" data-page-node-id="Kp4LYVESgbq1FJgUpswZsA">
+            <div class="kv-cell" data-page-node-id="CbMN663snqWjHSMVFkw0sx"><p data-page-node-id="9x01cFwDx6Fz2Kuv4e1nF2">个人账户</p><h3 class="tnum" data-page-node-id="5tFE7S5BPrrI7t371N9tFD">¥<span id="pn-pers" data-page-node-id="SxR2j1By2LvDl6d3l7GsGo">0</span></h3></div>
+            <div class="kv-cell" data-page-node-id="NE41syCxjtlAwDs76mNKxv"><p data-page-node-id="GQI0IcTieoTwZjvHhCXYzG">月缴存</p><h3 class="tnum" data-page-node-id="3ODYArFVgVy993jjk0YbVA">¥<span id="pn-month" data-page-node-id="RIN7zbhBRZdjWu6r7M4aBQ">0</span></h3></div>
+            <div class="kv-cell" data-page-node-id="9OdVHGZbUMJsAIzbeORjwm"><p data-page-node-id="5ZWlGI5TJF4P2QTVDMAgXv">记账利率</p><h3 class="tnum" data-page-node-id="jSiCLl3EkVoU4lF8Ja2ETQ"><span id="pn-rate" data-page-node-id="1M1EQHCHWUSBri30TZ4sZl">0</span>%</h3></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card gap-l" data-page-node-id="uFYvO5ksewteZCVkgJo0Gz">
+        <div class="card-title" data-page-node-id="qu4NpUoreyH1EeL36QVxfM"><span class="ico" data-page-node-id="Nax2ndeR17fy2Rh1MFrpJS">★</span>退休金预估<span class="badge" data-page-node-id="0eeLHWZOCyNty7kbhQiJ80">按 <span id="pn-age" data-page-node-id="1FmFA6rNg0ESobPRLMi1oh">50</span> 岁退休</span></div>
+        <div class="metric brand b" style="margin-bottom:12px" data-page-node-id="5EOh5aQumbqz7kwxL7K4dh">
+          <div class="lbl" data-page-node-id="Ucup4sGmQHdynVN7sBxELo">预估月退休金</div>
+          <div class="val tnum" id="pn-est" data-page-node-id="HIDGuILAu9Uh7RMzkH7GYy">¥0</div>
+          <div class="sub" data-page-node-id="fHDmvDULI03nWAG36D36Dj">基础养老金 ¥<span id="pn-base" data-page-node-id="wX5gQXYnu4m5zOFwcj9xu7">0</span> + 个人账户 ¥<span id="pn-pers-pay" data-page-node-id="MTcKigsEapKQ5sPomSlPwb">0</span></div>
+        </div>
+        <p class="muted" style="font-size:12px;line-height:1.6" data-page-node-id="CDVjUG7pxySzEPKSRgzodH">
+          公式：基础养老金 =（省社平工资 + 本人指数化月均缴费工资）÷2 × 缴费年限 × 1%；个人账户 = 个人账户储存额 ÷ 计发月数（50岁 195）。
+          参数可在设置中调整。本结果为基于现行政策的估算，以社保经办机构实际核定为准。
+        </p>
+      </div>
+
+      <div class="card gap-l" data-page-node-id="gulsFZkn4HNq7zNFKU4WdD">
+        <div class="card-title" data-page-node-id="9u4A1S0JCCSS68G8gSWBVF"><span class="ico" data-page-node-id="CG4g66Vz5GeFyOJ8wVFLPU">⇄</span>目标反推<span class="badge" data-page-node-id="OgZmCsKUGx91YGXk9bKiMK">想月领多少？</span></div>
+        <div class="slider-row" data-page-node-id="zZOspLjYNdNlvdUHDL2A1B">
+          <label data-page-node-id="SW0gzBGJAZRJSzwNARxeFN">期望月领</label>
+          <input type="range" min="3000" max="20000" step="500" value="8000" id="pn-target" data-page-node-id="zM2CweR6F3cqRUVRAlZS4e">
+          <div class="v tnum" id="pn-target-v" data-page-node-id="RvBMHG31bq4nv6BXcTLKUM">¥8,000</div>
+        </div>
+        <div class="kv" data-page-node-id="PZRCRHurQSY0kIAF1SgCUS">
+          <div class="kv-cell" data-page-node-id="XLFxDozIruPfk3BZSOB8Vh"><p data-page-node-id="nLzbvJaAkCsw7TK9A2qbFC">需缴费至</p><h3 class="tnum" data-page-node-id="hu1jjmeuaFJhq3HOuX1BhX"><span id="pn-tg-paid" data-page-node-id="QTX1gkKJT4w6H9GKA4VZNB">0</span><span class="u" data-page-node-id="HE2vx6twBtqBlBygKEtV8G">年</span></h3></div>
+          <div class="kv-cell" data-page-node-id="vHD5PoE49ZVt9va2h6UQEd"><p data-page-node-id="PeWfcHUZKv3Smq9mLNo9Kb">个人账户需</p><h3 class="tnum" data-page-node-id="hr03AL22ruhX7gKCrMAIqK">¥<span id="pn-tg-pers" data-page-node-id="yo4FdMa5IDa0FZ52h8kJOc">0</span></h3></div>
+          <div class="kv-cell" data-page-node-id="aO0nn1bOtBjbFDClhU76xq"><p data-page-node-id="RfUcNtqHquLSHNx4tTQIf7">月缴存需达到</p><h3 class="tnum" data-page-node-id="OWo2guGJPcJIRDYJ9FzV3f">¥<span id="pn-tg-month" data-page-node-id="QXsE173TSJar6xD5avN5Ia">0</span></h3></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FIRE -->
+    <section class="view hidden" id="view-fire" data-page-node-id="hF1WAgQ0gHkxrhkXyfazsv">
+      <div class="grid g-2" style="margin-bottom:14px" data-page-node-id="iwOmtSTQhCIbXQWVU6FVqc">
+        <div class="card" data-page-node-id="fUGQ5Y4Pq1qf2JMoM3GJWt">
+          <div class="card-title" data-page-node-id="rk6hTdGwWeWgUyiQCVVdYZ"><span class="ico" data-page-node-id="6GohdYUkZlPF0S0Nu34xe9">▣</span>FIRE 目标</div>
+          <div class="metric brand b" style="margin-bottom:12px" data-page-node-id="Fqo1FdXpmTHFZjNyhSDATE">
+            <div class="lbl" data-page-node-id="3P4r7mctD6vAXH5nHuJBLu">目标金额</div>
+            <div class="val tnum" id="fr-target" data-page-node-id="2N3ft7BG6U9BtTP9o9L8wG">¥0</div>
+            <div class="sub" data-page-node-id="QEJBdbnYzRUiP7Nxf8Lv2A">4% 法则反推：年支出 ¥<span id="fr-spend" data-page-node-id="GjPHOCBLTHQMHUASXukpt3">0</span> × 25</div>
+          </div>
+          <div class="slider-row" data-page-node-id="nEj09QoH7fvNMZwzlPdDBU">
+            <label data-page-node-id="P2Of8DLfZcLrjCmrhpjVeE">FIRE 目标</label>
+            <input type="range" min="500000" max="3000000" step="50000" value="1000000" id="fr-target-slider" data-page-node-id="QcrDHdzHVLtIPxqFWilUUs">
+            <div class="v tnum" id="fr-target-v" data-page-node-id="Vv4BxQ2W08dvGntwHGMgAq">¥1,000,000</div>
+          </div>
+          <div class="slider-row" data-page-node-id="FnrmdMbZ2rR3nqtsR12Q4T">
+            <label data-page-node-id="xjlash3G9yvP8QGELOK35w">年支出</label>
+            <input type="range" min="20000" max="100000" step="2000" value="40000" id="fr-spend-slider" data-page-node-id="b0zshxEFQFf1qC4ZwxK8Y5">
+            <div class="v tnum" id="fr-spend-v" data-page-node-id="TdPDFYprijYDkkkqYRZhPP">¥40,000</div>
+          </div>
+        </div>
+        <div class="card" data-page-node-id="lYYtTR9MGxrLiFli4FueHi">
+          <div class="card-title" data-page-node-id="k9TLKGgDSjI3VjaqC2Fhjg"><span class="ico" data-page-node-id="WpwXvQFkh1kjs3VvdzKeQN">%</span>当前进度</div>
+          <div style="display:flex;align-items:center;gap:24px" data-page-node-id="EJ4ku3wEffK3ieuUe27i86">
+            <svg width="120" height="120" viewBox="0 0 120 120" data-page-node-id="qegAOAC3pFvk9aIdZkhH3p">
+              <circle cx="60" cy="60" r="48" fill="none" stroke="var(--surface-2)" stroke-width="10" data-page-node-id="0XUafWMqiwbBtVnZfqKnlM"/>
+              <circle cx="60" cy="60" r="48" fill="none" stroke="var(--brand)" stroke-width="10" stroke-linecap="round" stroke-dasharray="301.6" stroke-dashoffset="0" id="fr-ring" transform="rotate(-90 60 60)" data-page-node-id="KAJ2urk7ss3uuWWZ010AMy"/>
+              <text x="60" y="58" text-anchor="middle" font-size="20" font-weight="500" fill="var(--text)" id="fr-pct" data-page-node-id="SCLtCu2FwinrHRcPDch3My">0%</text>
+              <text x="60" y="76" text-anchor="middle" font-size="11" fill="var(--text-3)" data-page-node-id="Y3BDIDX33P5klWIZjHmV8U">已完成</text>
+            </svg>
+            <div style="flex:1" data-page-node-id="oUslcsVvggHYOEgDkeMma9">
+              <p class="muted" style="margin:0;font-size:13px" data-page-node-id="US0OHxwrbkTWEuazunZSoU">还差</p>
+              <p class="tnum" style="margin:4px 0;font-size:20px;font-weight:500" id="fr-gap" data-page-node-id="7XCS2B7DlZ48Aoa7JSkiRU">¥0</p>
+              <p class="muted" style="margin:8px 0 0;font-size:12px" data-page-node-id="kF6vpNH8LKPO6HdI39PNMA">按月存 <b id="fr-save" style="color:var(--text)" data-page-node-id="rbrNz0bQ7p5tODUmkcW1jG">¥6,000</b> · 年化 <b id="fr-rate" style="color:var(--text)" data-page-node-id="geHulqi6SA7BzcPlA0Df0h">5%</b></p>
+              <p class="muted" style="margin:4px 0 0;font-size:13px" data-page-node-id="D4jK4NWCbnLZ5BkX3EZjx7">预计 <b id="fr-when" style="color:var(--brand-2)" data-page-node-id="xws8f0CCIK9BHO5qX9m7dd">—</b> 达成</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card gap-l" data-page-node-id="V1CmJhQzoVPHndYk7PaZwF">
+        <div class="card-title" data-page-node-id="x6WjkBLL2lhbEmilgQoFPz"><span class="ico" data-page-node-id="2Pd1jLpL6FznVPLHhOFWzU">⌇</span>复利曲线<span class="badge" data-page-node-id="yX1gKzY7UZ5uzjFRTZpsBv">月存 ¥<span id="fr-save2" data-page-node-id="Bp4hSlW7ce7pcWF0MiBETd">6,000</span> · 三档年化</span></div>
+        <div class="row gap-s" style="margin-bottom:10px" data-page-node-id="I8KZAxpBqN1BlmM3tmJSqR">
+          <button class="sm" data-rate="3" data-page-node-id="2Wy2EtrZA1Fcj1plSoIXqS">3%</button>
+          <button class="sm primary" data-rate="5" data-page-node-id="XTVEp4grTn8UWy6I31KDDL">5%</button>
+          <button class="sm" data-rate="8" data-page-node-id="6YZFyqbJyNHrwCP37AjkJT">8%</button>
+          <span class="muted" style="font-size:12px;margin-left:8px" data-page-node-id="SbCwGSMtOY0McVYIKoY0n5">点击切换主要展示曲线</span>
+        </div>
+        <svg id="fr-curve" viewBox="0 0 680 220" width="100%" data-page-node-id="SErtHMBAXxniREDWD7wLXF"></svg>
+      </div>
+
+      <div class="card gap-l" data-page-node-id="LMURajqr2HSl1viBfvb78I">
+        <div class="card-title" data-page-node-id="e5dqWjJPDureZMq7X7lQdC"><span class="ico" data-page-node-id="H5iSi6B6DaKOQzZfW5aW3U">⇪</span>FIRE 联动 · 理财能力</div>
+        <p style="margin:0 0 12px;font-size:13px;color:var(--text-2)" id="fr-link-out" data-page-node-id="9UilYHK4H66JWoDFPS2Fs7">调一下年化，看本金门槛变化：</p>
+        <div class="slider-row" data-page-node-id="E1UsEJlMZaaWwbOlK125lE">
+          <label data-page-node-id="Z0PsX3CArEBgaSj7kDWBld">我的年化水平</label>
+          <input type="range" min="0" max="10" step="0.1" value="4.2" id="fr-my-rate" data-page-node-id="UNkEGoHUMqEC9f6ELDwMYG">
+          <div class="v tnum" id="fr-my-rate-v" data-page-node-id="yBNEio2yHh7jmpXkvMjZ1g">4.2%</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- INVEST -->
+    <section class="view hidden" id="view-invest" data-page-node-id="6dtyCycFvFdel8wQyAFTdG">
+      <div class="grid g-4" style="margin-bottom:14px" data-page-node-id="BmKB1Ghc6ZuKhPB1iDevEa">
+        <div class="metric brand b" data-page-node-id="ptNM9mKwcd1MHe614N8hEC"><div class="lbl" data-page-node-id="b3waWvGYzmgppliTYQugsU">年内累计</div><div class="val tnum" id="iv-cum" data-page-node-id="Mxl5uugcffwmfPQBsGudsN">—</div><div class="sub" data-page-node-id="XqbbXDRb0zv2fqq75mlN0r">截止 <span id="iv-cut" data-page-node-id="iLMETZyPKJM9ZA6GPb8lwB">—</span></div></div>
+        <div class="metric b teal" data-page-node-id="XJSt3Wh3UIxGIp2Lyd4GsM"><div class="lbl" data-page-node-id="IU4jf277y097ghrUA2OkBi">折算年化</div><div class="val tnum" id="iv-ann" data-page-node-id="JUs6zHbFeA88CdaKLZvDNj">—</div></div>
+        <div class="metric b info" data-page-node-id="2yk7pHQICAIEuxVBDKRErx"><div class="lbl" data-page-node-id="WZX9YVdFIvf8X1a54ME7sS">超额（vs 沪深300）</div><div class="val tnum" id="iv-exc" data-page-node-id="DZuxEAB4Wloo7DXyFJMgA9">—</div></div>
+        <div class="metric b up" data-page-node-id="7ufTCdz0CDP9J6FgxU6Daq"><div class="lbl" data-page-node-id="jDFiSMGhTncXElIGHPeIGV">今年盈利金额</div><div class="val tnum" id="iv-amt" data-page-node-id="wXEJPuAUNc4PURtwgdNh10">—</div></div>
+      </div>
+
+      <div class="card gap-l" data-page-node-id="1FbKSF6pHZOX2YdiqRS099">
+        <div class="card-title" data-page-node-id="ItCdBAsqDHaSf1WxjXE5JT">
+          <span class="ico" data-page-node-id="P94B7sxPCRTvu6JGZtiItD">▤</span>截止当月的年利率曲线
+          <span class="badge" data-page-node-id="l9exWjKwMSKPFYAOFyRcS0">几何链接</span>
+          <span style="margin-left:auto" data-page-node-id="H4SBZ4mQjUEJFbHMHKMNU5">
+            <select id="iv-year" style="width:auto;padding:4px 8px;font-size:12px" data-page-node-id="A0mW2MnGaHJsPEiiWqFb23"></select>
+          </span>
+        </div>
+        <div class="legend" data-page-node-id="OiqlahcP4dwXWvxX3jVox7">
+          <span data-page-node-id="f2iyXOpsA6GrBd7h3Nh8p1"><span class="sw" style="background:#2F6BD8" data-page-node-id="9B4l30cqYUlWtYcCnByBFt"></span>我的累计</span>
+          <span data-page-node-id="jaFoDqNGulPHwFDy2aKb0m"><span class="sw" style="background:#A1A09B" data-page-node-id="QeJk0pyfruHGG3nBSvkwja"></span>沪深300</span>
+          <span data-page-node-id="h2YSYXNXujgffSlnub02sm"><span class="sw" style="background:#1D9E75" data-page-node-id="C3Rz99LZBl7rjADvtSXrvi"></span>年度目标 <span id="iv-target-lbl" data-page-node-id="8bMPORVLo8x9VS5ylQoboz">6%</span></span>
+        </div>
+        <div class="row gap-s" style="margin:8px 0 4px" data-page-node-id="5BPlDhQs3Z4hlkEsINFOEl">
+          <span class="tag" data-page-node-id="BrRDCRgAWIgbhRK6notShb">月录</span>
+          <span class="tag brand" id="iv-freq" data-page-node-id="4AgVP6RO8FvXnP2wmECcbX">月度</span>
+          <button class="sm ghost" onclick="toggleFreq()" id="iv-freq-btn" data-page-node-id="8Pw9v4fXLfyCx0B3ESLlE3">切到周录</button>
+        </div>
+        <div id="iv-input-grid" style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:6px;margin:10px 0 8px" data-page-node-id="wAUunjWEv6ZMaRnWcBxCXR"></div>
+        <svg id="iv-svg" viewBox="0 0 680 320" width="100%" data-page-node-id="OGgaG6V5OAELKi3DraRDSO"></svg>
+        <p class="muted" style="font-size:12px;line-height:1.6;margin-top:8px" data-page-node-id="ru8fUe7QQ4HvhU8johQe7P">累计收益率 = (1+r₁)(1+r₂)…−1（几何链接，不是相加）；年化 = (1+年内累计)^(12/已过月数)−1。期末市值+期间投入录入后系统会用修正 Dietz 算出点数，本页可直接编辑点数。</p>
+      </div>
+
+      <div class="grid g-2 gap-l" data-page-node-id="xoM922oqCszNnVDhryl3yO">
+        <div class="card" data-page-node-id="FwPRgmLeYAqrBkhPQg5Ykc">
+          <div class="card-title" data-page-node-id="c2MBioqFZmL16zKOeRmw4m"><span class="ico" data-page-node-id="62gduzaQ5Sgg7oxnUnedol">▥</span>记录表</div>
+          <table class="table" id="iv-tbl" data-page-node-id="lq4A0amUh6rPEN1Jm777i8">
+            <thead data-page-node-id="I0IFU9pBAuvDuLddq46Qpy"><tr data-page-node-id="lrMRJr08AdIcErk2xgbgIS"><th data-page-node-id="UNE5GFZk7FxOYu4Tj8STIZ">月份</th><th class="num" data-page-node-id="WxsdTQ9Clgoi7md4uWd0z5">点数</th><th class="num" data-page-node-id="JW4sxU6e5vppJcBY4pWBC2">基准</th><th class="num" data-page-node-id="laSGLB8nX8a4KQ9g7snTzS">超额</th><th class="num" data-page-node-id="wTpEEs3MVVd9KUlMD130HG">累计</th></tr></thead>
+            <tbody data-page-node-id="tEwUpIlOjsMw5DsP6EZ3Hl"></tbody>
+          </table>
+        </div>
+        <div class="card" data-page-node-id="NYVghgFf7yOHfTonmCY612">
+          <div class="card-title" data-page-node-id="FFelRkZjcjYqCfHpMG8Vop"><span class="ico" data-page-node-id="oQzG7t8XbJGU8DgYrBI9hw">★</span>能力评级</div>
+          <div class="metric brand b" style="margin-bottom:12px" data-page-node-id="O2zAM6S3WdTEeebxyGoELS">
+            <div class="lbl" data-page-node-id="hbJQGnWG8aksEc9zduPMpe">当前评级</div>
+            <div class="val" id="iv-rate-name" data-page-node-id="THa8jpdH48akGqoEZdGGPu">—</div>
+            <div class="sub" id="iv-rate-desc" data-page-node-id="ZT2YyXEkMByTi0MsJGevB2">—</div>
+          </div>
+          <p class="muted" style="font-size:12px;line-height:1.6" data-page-node-id="AkZ59xHrScK3D6vjMmOIVE">
+            评级基于「近 12 月年化 vs 基准 + 回撤控制 + 持续期」综合判定。本月调整能力评级阈值可在设置中修改。
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="view hidden" id="view-settings" data-page-node-id="CzRm2ksJ7sbJHuMAoxBfAF">
+      <div class="card" data-page-node-id="5MQIfRmSK3nwBaVFrKmgA5">
+        <div class="card-title" data-page-node-id="yln6HuWcyepEqGaV6POJjc"><span class="ico" data-page-node-id="Q4pdJV9iwistRP3DnNkMeL">◐</span>作息与薪资<span class="badge" data-page-node-id="Or4BjxUh0TISptM89ImZtB">影响今日面板</span></div>
+        <div class="grid g-2" data-page-node-id="GS2j3XyhpArwrXnOsByraI">
+          <div data-page-node-id="Y02reh9iiJ26kiBuoldIKw"><label data-page-node-id="xC32gvZiZXm3MDpwVz2wxo">上班时间</label><input type="time" id="set-work-start" value="09:00" data-page-node-id="P1Bj1pxZDFDgdfCd0wpK0h"></div>
+          <div data-page-node-id="CcbnayYAQUSAancrv9wAlp"><label data-page-node-id="mpQbHKTxZaaFJmCuFApDDC">下班时间</label><input type="time" id="set-work-end" value="18:00" data-page-node-id="xueF5ZIL6xIrgyOsZZPJaa"></div>
+          <div data-page-node-id="XHnjWEFisRk5UFiqpyTLwz"><label data-page-node-id="OdaPZCMNw9BW9qyLymq3ee">午休开始</label><input type="time" id="set-lunch-start" value="12:00" data-page-node-id="9GcBbj5BQW9TRgmzogQVod"></div>
+          <div data-page-node-id="MysM5YopqzqRDcLHOW9cbV"><label data-page-node-id="CuLpvI0xCeuKEydOPWDSAH">午休结束</label><input type="time" id="set-lunch-end" value="13:00" data-page-node-id="U3yb8vkBoIMyFzHJ6UA77K"></div>
+          <div data-page-node-id="7ggHxWW4kQBjhp0pLTEknJ"><label data-page-node-id="q4HlG9h2uhfH5M2OGFmFzN">月薪（税后）</label><input type="number" id="set-salary" value="13500" step="100" data-page-node-id="L24JPZFUsEBmHbvJbvFBYf"></div>
+          <div><label>计薪天数</label><div class="auto-field" id="set-days-auto">—</div><p class="muted" style="font-size:12px;margin:4px 0 0">按当月工作日自动计算，日薪 = 税后月薪 ÷ 计薪天数</p></div>
+          <div data-page-node-id="tYlHG1osybYeiaRtpoHk9k"><label data-page-node-id="BgWy50CvErGbDEcljqGQ4B">加班费倍率（工作日）</label><input type="number" id="set-ot-w" value="1.5" step="0.1" data-page-node-id="ky7CTyUiqYPErCo5wZOVDV"></div>
+          <div data-page-node-id="4LTYfeu22rBsVoovTAU5Gk"><label data-page-node-id="KedzM6aKMBbDCR4GAYjH19">加班费倍率（周末）</label><input type="number" id="set-ot-we" value="2" step="0.1" data-page-node-id="rvdR68Bv9BRBAEdwafRnr6"></div>
+          <div class="field-full"><label>法定节假日 / 调休上班日（影响计薪天数）</label>
+            <textarea id="set-holidays" rows="2" placeholder="放假：2026-10-01,10-02,10-05&#10;调休上班：2026-10-10*,09-27*"></textarea>
+            <p class="muted" style="font-size:12px;margin:4px 0 0">逗号分隔；日期后加 <b>*</b> 表示调休要上班（周末也计薪）。留空则只按周一至周五计算。</p>
+          </div>
+          <div class="field-full"><label>未打卡的日期如何处理</label>
+            <div class="grid g-2" style="gap:8px">
+              <label style="display:flex;align-items:center;gap:10px;padding:9px 10px;border:1px solid var(--border);border-radius:10px;cursor:pointer;line-height:1.35">
+                <span style="width:18px;height:18px;flex-shrink:0;display:flex;align-items:center;justify-content:center"><input type="radio" name="unpunched" value="standard" style="margin:0"></span>
+                <span>按默认作息（未打卡的工作日按规定上下班时间计算时长）</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:10px;padding:9px 10px;border:1px solid var(--border);border-radius:10px;cursor:pointer;line-height:1.35">
+                <span style="width:18px;height:18px;flex-shrink:0;display:flex;align-items:center;justify-content:center"><input type="radio" name="unpunched" value="off" style="margin:0"></span>
+                <span>视为当天没上班（未打卡的工作日不计入在司时长）</span>
+              </label>
+            </div>
+            <p class="muted" style="font-size:12px;margin:4px 0 0">该设置从今天起对未打卡日期生效；今天之前的历史日期不受影响（保持默认作息）。</p>
+          </div>
+          <div data-page-node-id="TYHDP9f4CP54hMI9QN4zGo"><label data-page-node-id="YqTOIXlC5hwjpPy1eBR4qW">入职日期</label><input type="date" id="set-hire" value="2022-07-01" data-page-node-id="G7P0TQFVRExnC0qyBiBqNo"></div>
+          <div data-page-node-id="8yggcULzasZD8UDo3cMzNi"><label data-page-node-id="1T1KJ9vXEuvPPpj9wlZlrd">年终奖金额（12月）</label><input type="number" id="set-bonus" value="50000" step="1000" data-page-node-id="CmoROS3CjD9ZiyMK37zG6b"></div>
+          <div data-page-node-id="CB3hKas9rv4y4bV1DokQGZ"><label data-page-node-id="1do0gl9j1qUdB3zzowePhf">是否摊入每日薪资跳动</label>
+            <select id="set-bonus-amort" data-page-node-id="kHPttQdgIlSgeHWRc78f0l"><option value="0" data-page-node-id="1NhQjR8m9tgs71F5vOhGNq">不摊，只作为一次性收入</option><option value="1" data-page-node-id="Y1xLfBB1WaC2siM8i4JT98">摊入月薪</option></select>
+          </div>
+          <div data-page-node-id="yYoJnSaTO7VPe5PtOcMCOt"><label data-page-node-id="5sBD9u2gDyx7oGPe8xgzGx">工作城市</label>
+            <select id="set-city" data-page-node-id="D42sBlSnHfbEBquwLvZyx8"><option value="成都" selected data-page-node-id="6toc2CSuDaxWiZfbcqSwH5">成都</option><option value="北京" data-page-node-id="9tx4sE2oGbhAu911f1dMhg">北京</option><option value="上海" data-page-node-id="sMBTIgc9ZKcQ9D644QSclP">上海</option><option value="深圳" data-page-node-id="QIOIucLhtYxbHfPc5f2i6v">深圳</option><option value="广州" data-page-node-id="hxJIjERtmujavB1HkAdmg5">广州</option><option value="杭州" data-page-node-id="hyuDhL9yVGLEUqj6PdtK1i">杭州</option><option value="其他" data-page-node-id="kWnPNn6ScVgJA7WEWKBRgy">其他</option></select>
+          </div>
+        </div>
+      </div>
+
+      <div class="card gap-l" data-page-node-id="stgTezxKxD03nx61ww4lIz">
+        <div class="card-title" data-page-node-id="LT42DC5BP1DSmdSVqk20A1"><span class="ico" data-page-node-id="IQ4BWF4oSonVHQ6EdHaSqO">▦</span>发薪配置</div>
+        <div class="grid g-2" data-page-node-id="5MOfLAWSjO0je0QjPPwW3c">
+          <div data-page-node-id="GPjzzcev9NXUqR2pVNCYqR"><label data-page-node-id="OBFTx1JwsGj0GbS4GhAfVT">发薪类型</label>
+            <select id="set-pay-type" data-page-node-id="VvwPQ4ws0FTlENnKHD9gEv"><option value="current_month" data-page-node-id="pJiMSYORgut0XkCEc23ofe">当月发当月</option><option value="next_month" data-page-node-id="GM4x1HMVIzPooray2154gB">次月发上月</option></select>
+          </div>
+          <div data-page-node-id="W9HbQl90wTUyG06VZgFuoo"><label data-page-node-id="VTLKkeDLtB9vq1YRYJeH9d">发薪日期</label><input type="number" id="set-pay-day" min="1" max="31" value="15" data-page-node-id="o4AC1daXGA22EbHnRQJ5wU"></div>
+          <div data-page-node-id="FHAIC7y1ziXlAdHP1gppJF"><label data-page-node-id="RunqHjc6PgA9dDp2m2QvaZ">遇周末/节假日</label>
+            <select id="set-pay-rule" data-page-node-id="BCi5J4Lk3KiiulGeSTdh7u"><option value="advance" data-page-node-id="H0flCpy6mLUYhUC0yiOBBH">提前发放</option><option value="delay" data-page-node-id="NevfyKWuNSGLFR7MPz0m3Q">顺延</option><option value="same" data-page-node-id="mHXeEZDbmMmxuqGG4Sxn1g">不变</option></select>
+          </div>
+          <div data-page-node-id="kj5ewCC0PvlZqJgLKXtTEO"><label data-page-node-id="aLL35hGl2NqH7pZJ4cG1m6">预计到账金额</label><input type="number" id="set-pay-amt" value="13500" step="100" data-page-node-id="36LXHsVsfFoQFqv9hfDu3h"></div>
+        </div>
+      </div>
+
+      <div class="card gap-l" data-page-node-id="sVXe5FWO7to8SNobnG7mC7">
+        <div class="card-title" data-page-node-id="dL9vmuZE0CSWQHJP7huuPw"><span class="ico" data-page-node-id="ZA3ECCeDSLBTQHTccKmz2c">◯</span>养老参数<span class="badge" data-page-node-id="GDgoAeOQBD0gJguvFgz2de">成都 · 四川省口径</span></div>
+        <div class="grid g-2" data-page-node-id="QGZIGO2t4QdPbEQS2mV5cn">
+          <div data-page-node-id="rN3o5T0GrVZNsMU5E6ok3y"><label data-page-node-id="1ZEKhEptV1l9RUrtoBDhD9">已缴年限</label><input type="number" id="set-pn-paid" value="8.25" step="0.25" data-page-node-id="JV6xwL9eJ8HmmByQocHbEG"></div>
+          <div data-page-node-id="e5pnZ8JdIGNDHxCZJrcark"><label data-page-node-id="jnhldryEBEa8H4A2vy2N60">个人账户余额</label><input type="number" id="set-pn-pers" value="51200" step="100" data-page-node-id="dUVLC73yEwFO1wW01iBe1u"></div>
+          <div data-page-node-id="ZHKo75RFQNBEo71HBZlE7m"><label data-page-node-id="Y1N9CAcYNciMWzQI3Q7xVB">省社平工资（月）</label><input type="number" id="set-pn-wage" value="8321" step="50" data-page-node-id="hJekLXRao1tYf1F6IXmsuA"></div>
+          <div data-page-node-id="YH34ENlxYYACNisfRw0EHk"><label data-page-node-id="fS5WErU0xYIMgfWfs7LHcM">本人平均缴费指数</label><input type="number" id="set-pn-idx" value="1.0" step="0.05" data-page-node-id="9ucGrXxh0GZ7VjdDwkfo1R"></div>
+          <div data-page-node-id="xy5mqX1AD34U3SDK4JZdbS"><label data-page-node-id="8h5AiVIzpjddpLyJOJKJII">个人账户记账利率（%）</label><input type="number" id="set-pn-rate" value="4" step="0.1" data-page-node-id="SNHKIzEmIv9sB4o5fbGetY"></div>
+          <div data-page-node-id="mmsrGHcJdVBaorYAlFI3bV"><label data-page-node-id="WI5st6uOF1Voh4sa6YS52z">预期退休年龄</label>
+            <select id="set-pn-age" data-page-node-id="vF8V3bTI1j2akPOvKRUhDz"><option data-page-node-id="B5LWvRaTf5Mbny70lePLAX">50</option><option data-page-node-id="Ix0sXiQYnPpxS0tMOCnirS">55</option><option selected data-page-node-id="CPNHvxJ54qxQc4K1KtOppH">60</option><option data-page-node-id="wXjfDSeKdh6SBPkz2vRhHR">63</option></select>
+          </div>
+        </div>
+      </div>
+
+      <div class="card gap-l" data-page-node-id="A7EY1JIWkCMcBfj15Igvo6">
+        <div class="card-title" data-page-node-id="nW5AgDH2OBqfb1hIvXIcLZ"><span class="ico" data-page-node-id="rhaafEQdBsDyraOOaORHqv">▣</span>FIRE 目标</div>
+        <div class="grid g-2" data-page-node-id="b1tLqiXRBUhenyXMIat0tG">
+          <div data-page-node-id="5alBZS9Iw6A0R2KcbI3XAr"><label data-page-node-id="TStrIvKx0wFvXrqdmjayJU">目标金额</label><input type="number" id="set-fr-tgt" value="1000000" step="10000" data-page-node-id="vHr3oJgzo5kETlvoaIRxs6"></div>
+          <div data-page-node-id="opy5xSHJLYMqiU7bZJHOKO"><label data-page-node-id="bAgfJPLPGVuJ5MnGmMiOcN">目标年支出（4% 法则）</label><input type="number" id="set-fr-spend" value="40000" step="1000" data-page-node-id="LTqDvTc9pu5FjG1V1Ar7EX"></div>
+          <div data-page-node-id="efHtgeAwWA1r2wuDx0l7nY"><label data-page-node-id="LIu4Yehf3VhcJvnuOsMEOC">每月可储蓄</label><input type="number" id="set-fr-save" value="6000" step="500" data-page-node-id="pCBkjxxXOFrEPYQaHF5x0k"></div>
+          <div data-page-node-id="2XRgxXB3IqjKksl3vvX1fL"><label data-page-node-id="uedCby0WDZBGFKLoGG23SC">假设年化（%）</label><input type="number" id="set-fr-rate" value="5" step="0.5" data-page-node-id="mHoYEHdBmxKTDawwkbLOVN"></div>
+        </div>
+      </div>
+
+      <div class="card gap-l" data-page-node-id="NAhSNuKq5NvG08FMNXSxfT">
+        <div class="card-title" data-page-node-id="mMPnmutV2Vqnr7QEHg7qo2"><span class="ico" data-page-node-id="PlvsqTqSph0InfBXsVUEY3">▲</span>理财能力</div>
+        <div class="grid g-2" data-page-node-id="ZT5WyLbgJeeNoZ9wEQTXAG">
+          <div data-page-node-id="xrHzkdSwsWtyHGAujRYhlX"><label data-page-node-id="1cLi16Q6AvaC4opbXajNx1">今年收益率目标（%）</label><input type="number" id="set-iv-tgt" value="6" step="0.5" data-page-node-id="OrwG3x0mpSDFOsveZ0N6cL"></div>
+          <div data-page-node-id="N3mCqFYpiXcNpRnSmcB8ID"><label data-page-node-id="d9AwqwkhjRfFPvKW8bSuFu">基准</label>
+            <select id="set-iv-bench" data-page-node-id="z5opuRr1cYar64z7xHpZs4"><option value="csi300" data-page-node-id="s2c8eg8yAh54Yu46xNCTlh">沪深300</option><option value="csi500" data-page-node-id="CXuVv1lFk741v2Vfx67bOk">中证500</option><option value="yubao" data-page-node-id="MtVmGI6F8GT6C6o9XBwdcr">余额宝</option><option value="custom" data-page-node-id="QCFsGorZK4OcsRTswDH9ZE">自定义</option></select>
+          </div>
+          <div data-page-node-id="DCXpJJod19CMWagujwJAQq"><label data-page-node-id="Yy5mIDzWydiYZ2ebLy4SaU">基准月度点数序列（12 个，% ,逗号分隔）</label>
+            <input id="set-iv-bench-v" value="-2.1,2.3,0.5,-1.0,1.4,0.9,-1.8,2.0,1.1,-0.4,1.6,0.7" data-page-node-id="H067xlPa4AD0DSskk0hLIJ">
+          </div>
+          <div data-page-node-id="DSOy0WZ3y9LAGpMH1mjik4"><label data-page-node-id="nIj6ShTqwshViHg0tcSyVd">初始本金（用于累计盈亏估算）</label><input type="number" id="set-iv-base" value="156000" step="1000" data-page-node-id="WefG5yoDxkSLYi9uzQcPRu"></div>
+        </div>
+      </div>
+
+      <div class="card gap-l" data-page-node-id="frrESL0jqMYOErJnaWvs0C">
+        <div class="card-title" data-page-node-id="vxmuTZGjyjpiOGIa3IoAce"><span class="ico" data-page-node-id="hQIT5QN08WS0wlN5EAQVn7">⚙</span>数据</div>
+        <div class="row wrap" data-page-node-id="kLNI2ZFkuDGbLq7SZKEfMA">
+          <button onclick="exportData()" data-page-node-id="oApimY4tMlWae0sQ5XHre9">导出 JSON</button>
+          <button onclick="document.getElementById('import-file').click()" data-page-node-id="PIrkvNhSZjS8prJlOWdrnS">导入 JSON</button>
+          <input type="file" id="import-file" accept="application/json" hidden data-page-node-id="7emZfYbPaUHtIm5m4wvnZL">
+          <button onclick="loadDemo(true)" data-page-node-id="otMSdIKXEvUOuQ9A47QULV">填入示例数据</button>
+          <button class="ghost" onclick="clearAll()" data-page-node-id="Kmsve2IyQ2nlQ95GDtBKaB">清空所有</button>
+        </div>
+        <p class="muted" style="font-size:12px;margin:12px 0 0;line-height:1.6" data-page-node-id="CbrSnasaTndskYy9aUMPB6">所有数据保存在浏览器 localStorage（清缓存会丢）。建议每季度导出一次备份。</p>
+      </div>
+
+      <div class="row" style="margin-top:18px;justify-content:flex-end;gap:8px" data-page-node-id="O7G79zuxEJKXnSdiwrxLGm">
+        <button onclick="resetSettings()" data-page-node-id="SfkHjDjPbImj5nky0wn8Fm">恢复默认</button>
+        <button class="primary" onclick="saveSettings()" data-page-node-id="fXRLwE9eniyz1Byi7B1Hay">保存设置</button>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- Mobile tab bar -->
+<div class="tab-bar" id="tabBar" data-page-node-id="Z0ZLJGK3EA68v6oYiVJ9vX"></div>
+
+<!-- FAB -->
+<button class="fab" onclick="quickAdd()" title="快速记账" data-page-node-id="aUgI7BgKG35pmC55VzXQbJ">＋</button>
+
+<!-- Modals -->
+<div class="modal-bg hidden" id="modalBg" onclick="if(event.target===this)closeSheet()" data-page-node-id="dJFVKcDXkvxrgVlpNuZzJL">
+  <div class="modal" id="modalBody" data-page-node-id="8fgiBtZC3jgnJLYCa5rtfE"></div>
+</div>
+
+<script src="./app.js"></script>
+</body>
+</html>
