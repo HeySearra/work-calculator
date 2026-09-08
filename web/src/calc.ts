@@ -38,11 +38,11 @@ export function workdaysPassed(d: Date, holidays: Record<string, number>): numbe
   for (let day = 1; day <= d.getDate(); day++) if (isWorkday(new Date(y, m, day), holidays)) n++
   return n
 }
-export function monthlyPay(p: Profile): number {
-  return p.salary + (p.bonusAmort ? (p.bonus || 0) / 12 : 0)
+export function monthlyPay(p: Profile, pay: Payday): number {
+  return pay.amount + (p.bonusAmort ? (p.bonus || 0) / 12 : 0)
 }
-export function dailyPay(p: Profile, d: Date, holidays: Record<string, number>): number {
-  return monthlyPay(p) / payDays(d, holidays)
+export function dailyPay(p: Profile, pay: Payday, d: Date, holidays: Record<string, number>): number {
+  return monthlyPay(p, pay) / payDays(d, holidays)
 }
 
 // ---------- 节假日文本 ⇄ 对象 ----------

@@ -12,7 +12,7 @@ function applyForm(d: AppState, f: Str) {
   const num = (k: string) => Number(f[k]) || 0
   const p = d.profile, pn = d.pension, fr = d.fire, iv = d.invest, py = d.payday
   p.workStart = f.workStart; p.workEnd = f.workEnd; p.lunchStart = f.lunchStart; p.lunchEnd = f.lunchEnd
-  p.salary = num('salary'); p.otW = num('otW'); p.otWe = num('otWe'); p.hireDate = f.hireDate
+  p.otW = num('otW'); p.otWe = num('otWe'); p.hireDate = f.hireDate
   p.bonus = num('bonus'); p.bonusAmort = f.bonusAmort === '1'; p.unpunchedMode = (f.unpunchedMode as 'standard' | 'off')
   py.type = (f.payType as 'current_month' | 'next_month'); py.day = num('payDay'); py.rule = (f.payRule as 'advance' | 'delay' | 'same'); py.amount = num('payAmt')
   pn.paidMonths = num('pnPaidMonths'); pn.minMonths = num('pnMinMonths'); pn.paid = pn.paidMonths / 12
@@ -42,7 +42,7 @@ export function Settings() {
     const p = S.profile, pn = S.pension, fr = S.fire, iv = S.invest, py = S.payday
     return {
       workStart: p.workStart, workEnd: p.workEnd, lunchStart: p.lunchStart, lunchEnd: p.lunchEnd,
-      salary: String(p.salary), otW: String(p.otW), otWe: String(p.otWe), hireDate: p.hireDate,
+      otW: String(p.otW), otWe: String(p.otWe), hireDate: p.hireDate,
       bonus: String(p.bonus), bonusAmort: p.bonusAmort ? '1' : '0', unpunchedMode: p.unpunchedMode,
       payType: py.type, payDay: String(py.day), payRule: py.rule, payAmt: String(py.amount),
       pnPaidMonths: String(pn.paidMonths), pnMinMonths: String(pn.minMonths),
@@ -92,7 +92,7 @@ export function Settings() {
 
   function num(k: string) { return Number(f[k]) || 0 }
   const pd = payDays(appToday(), S.holidays)
-  const dp = dailyPay(S.profile, appToday(), S.holidays)
+  const dp = dailyPay(S.profile, S.payday, appToday(), S.holidays)
 
   function resetDefault() {
     if (!confirm('恢复默认设置？现有收支/盈亏记录保留。')) return
@@ -177,9 +177,8 @@ export function Settings() {
               {field('午休止', 'lunchEnd', 'time')}
             </div>
             <div className="fld-row">
-              {field('月薪', 'salary', 'number')}
-              {field('周末加班倍数', 'otWe', 'number', '0.1')}
               {field('工作日加班倍数', 'otW', 'number', '0.1')}
+              {field('周末加班倍数', 'otWe', 'number', '0.1')}
             </div>
             <div className="fld-row">
               {field('入职日期', 'hireDate', 'date')}

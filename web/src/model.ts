@@ -9,7 +9,6 @@ export interface Profile {
   workEnd: string
   lunchStart: string
   lunchEnd: string
-  salary: number
   otW: number
   otWe: number
   hireDate: string
@@ -168,7 +167,6 @@ export const DEFAULT: AppState = {
     workEnd: '18:00',
     lunchStart: '12:00',
     lunchEnd: '13:00',
-    salary: 13500,
     otW: 1.5,
     otWe: 2,
     hireDate: '2022-07-01',
@@ -224,7 +222,14 @@ export function mergeState(v: Partial<AppState> | null | undefined): AppState {
     ...v,
     user: { ...DEFAULT.user, ...(v.user || {}) },
     profile: { ...DEFAULT.profile, ...(v.profile || {}) },
-    payday: { ...DEFAULT.payday, ...(v.payday || {}) },
+    payday: (() => {
+      const pay = { ...DEFAULT.payday, ...(v.payday || {}) }
+      // 旧数据兼容：原 profile.salary 迁移到 payday.amount
+      if (v.profile && typeof (v.profile as any).salary === 'number' && !(v.payday && (v.payday as any).amount > 0)) {
+        pay.amount = (v.profile as any).salary
+      }
+      return pay
+    })(),
     pension: (() => {
       const p = { ...DEFAULT.pension, ...(v.pension || {}) }
       if (v.pension && typeof v.pension.paidMonths !== 'number') {

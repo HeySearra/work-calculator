@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useStore } from '../store'
 import { appToday, fmt, fmtN } from '../format'
-import { isWorkday, punchInfo, fmtDur, stdMinutes, unpunchedAsOff, dailyPay } from '../calc'
+import { isWorkday, punchInfo, fmtDur, stdMinutes, unpunchedAsOff } from '../calc'
 import { Heatmap } from '../components/Heatmap'
 import { PunchModal } from '../components/PunchModal'
 

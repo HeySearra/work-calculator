@@ -22,7 +22,7 @@ export function Today() {
   const ws = parseHM(p.workStart), we = parseHM(p.workEnd)
   const ls = parseHM(p.lunchStart), le = parseHM(p.lunchEnd)
   const workMins = stdMinutes(p)
-  const daily = dailyPay(p, now, S.holidays)
+  const daily = dailyPay(p, S.payday, now, S.holidays)
   const rate = workMins > 0 ? daily / (workMins / 60) : 0
   const nowM = realNow.getHours() * 60 + realNow.getMinutes()
 
@@ -152,7 +152,7 @@ export function Today() {
             <span className="badge" style={{ marginLeft: 'auto' }}>本薪资周期</span>
           </div>
           <p className="muted" style={{ fontSize: 13, margin: '0 0 8px' }}>
-            这笔 <b className="tnum" style={{ color: 'var(--text)' }}>{fmtN(p.salary, 0)}</b> 你已赚到{' '}
+            这笔 <b className="tnum" style={{ color: 'var(--text)' }}>{fmtN(S.payday.amount, 0)}</b> 你已赚到{' '}
             <b className="tnum" style={{ color: 'var(--brand-2)' }}>{(period.pct * 100).toFixed(0)}%</b>
           </p>
           <div className="progress" style={{ margin: '8px 0 10px' }}>
