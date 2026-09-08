@@ -19,11 +19,30 @@ _CACHE_TTL = 3600
 
 def _fetch_timor(year: int) -> dict:
     url = f"https://timor.tech/api/holiday/year/{year}/"
-    try:
-        with urllib.request.urlopen(url, timeout=10) as resp:
-            data = json.loads(resp.read().decode("utf-8"))
-    except (URLError, json.JSONDecodeError) as e:
-        raise HTTPException(status_code=502, detail=f"无法获取节假日数据: {e}")
+    req = urllib.request.Request(
+        url,
+        headers={
+            # timor.tech 会拦截默认 urllib UA，必须带浏览器 UA，否则 403
+            "User-Agent": (
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/120.0.0.0 Safari/537.36"
+            ),
+            "Accept": "application/json",
+        },
+    )
+    last_err: Exception | None = None
+    # 轻量重试：公网免费接口偶发频率限制(429)或网络抖动
+    for _ in range(3):
+        try:
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+            break
+        except (URLError, json.JSONDecodeError) as e:
+            last_err = e
+            time.sleep(1)
+    else:
+        raise HTTPException(status_code=502, detail=f"无法获取节假日数据: {last_err}")
 
     if data.get("code") != 0 or not isinstance(data.get("holiday"), dict):
         raise HTTPException(status_code=502, detail="节假日接口返回异常")
