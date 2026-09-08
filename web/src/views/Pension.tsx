@@ -141,34 +141,30 @@ export function Pension() {
       {/* 账户余额 */}
       <div className="card balance-card">
         <div className="card-title"><span className="ico">¥</span>账户余额</div>
-        <div className="card-stretch">
-          <div className="kv" style={{ padding: 0, border: 'none', gap: 8 }}>
-            <div className="kv-cell">
-              <p>养老个人账户</p>
-              <h3 className="tnum">{fmt(pn.personal)}</h3>
-            </div>
-            <div className="kv-cell">
-              <p>月缴存</p>
-              <h3 className="tnum">{fmt(personalMonthly)}</h3>
-            </div>
-            <div className="kv-cell">
-              <p>记账利率</p>
-              <h3 className="tnum">{pn.rate}<span className="u">%</span></h3>
-            </div>
+        <div className="kv balance-kv" style={{ padding: 0, border: 'none', gap: 8 }}>
+          <div className="kv-cell">
+            <p>养老个人账户</p>
+            <h3 className="tnum">{fmt(pn.personal)}</h3>
           </div>
-          <div className="kv" style={{ padding: 0, border: 'none', gap: 8, marginTop: 10 }}>
-            <div className="kv-cell">
-              <p>企业年金/职业年金</p>
-              <h3 className="tnum">{fmt(pn.annBal)}</h3>
-            </div>
-            <div className="kv-cell">
-              <p>月缴存</p>
-              <h3 className="tnum">{fmt(annMonthly)}</h3>
-            </div>
-            <div className="kv-cell">
-              <p>单位 / 个人</p>
-              <h3 className="tnum">{fmt(annCompMonthly)}<span className="u"> / </span>{fmt(annPersMonthly)}</h3>
-            </div>
+          <div className="kv-cell">
+            <p>月缴存</p>
+            <h3 className="tnum">{fmt(personalMonthly)}</h3>
+          </div>
+          <div className="kv-cell">
+            <p>记账利率</p>
+            <h3 className="tnum">{pn.rate}<span className="u">%</span></h3>
+          </div>
+          <div className="kv-cell">
+            <p>企业年金/职业年金</p>
+            <h3 className="tnum">{fmt(pn.annBal)}</h3>
+          </div>
+          <div className="kv-cell">
+            <p>月缴存</p>
+            <h3 className="tnum">{fmt(annMonthly)}</h3>
+          </div>
+          <div className="kv-cell">
+            <p>单位 / 个人</p>
+            <h3 className="tnum">{fmt(annCompMonthly)}<span className="u"> / </span>{fmt(annPersMonthly)}</h3>
           </div>
         </div>
         <p className="hint" style={{ marginTop: 'auto', paddingTop: 10 }}>个人账户≈月缴存 {fmt(personalMonthly)}，按缴费基数 8% 估算；年金为补充养老</p>

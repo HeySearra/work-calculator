@@ -95,11 +95,18 @@ body {
 .pension-grid .full-col { grid-column: 1 / -1; }
 .pension-grid .card { margin: 0; display: flex; flex-direction: column; }
 .pension-grid .card-stretch { flex: 1; display: flex; flex-direction: column; justify-content: center; min-height: 0; }
+.pension-grid .balance-card { grid-column: 1 / -1; }
 .balance-card .kv { gap: 8px; }
 .balance-card .kv-cell { min-width: 0; }
 .balance-card .kv-cell h3 { font-size: 17px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* 账户余额：两组信息放同一排，中间用虚线隔开 */
+.balance-kv { flex-wrap: nowrap; }
+.balance-kv .kv-cell:nth-child(3) { border-right: 1px dashed var(--border); padding-right: 8px; }
 @media (max-width: 760px) {
   .pension-grid { grid-template-columns: 1fr; }
+  .balance-kv { flex-wrap: wrap; }
+  .balance-kv .kv-cell { min-width: 90px; }
+  .balance-kv .kv-cell:nth-child(3) { border-right: none; padding-right: 0; }
 }
 
 /* 键值 / 列表 */
