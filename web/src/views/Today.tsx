@@ -92,10 +92,10 @@ export function Today() {
 
   // 里程碑
   const ms = [
-    { p: 0.25, label: '今天赚到了 25%', reach: pct >= 0.25 },
+    { p: 0.25, label: '今天赚到了 25%（开局稳住）', reach: pct >= 0.25 },
     { p: 0.5, label: '今天赚到了 50%（半天白送）', reach: pct >= 0.5 },
-    { p: 0.75, label: '今天赚到了 75%', reach: pct >= 0.75 },
-    { p: 1, label: '今天赚到了 100%', reach: pct >= 1 },
+    { p: 0.75, label: '今天赚到了 75%（胜利在望）', reach: pct >= 0.75 },
+    { p: 1, label: '今天赚到了 100%（收工大吉）', reach: pct >= 1 },
   ]
 
   return (
