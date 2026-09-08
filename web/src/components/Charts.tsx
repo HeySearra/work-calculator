@@ -19,6 +19,7 @@ export function LineChart({
   xTicks = [],
   yTicks = [],
   yFormat = (n) => String(Math.round(n)),
+  showMarkers = true,
   padL = 46,
   padR = 14,
   padT = 14,
@@ -35,6 +36,7 @@ export function LineChart({
   xTicks?: { x: number; text: string }[]
   yTicks?: { y: number; text: string }[]
   yFormat?: (n: number) => string
+  showMarkers?: boolean
   padL?: number
   padR?: number
   padT?: number
@@ -68,16 +70,20 @@ export function LineChart({
         <path key={'f' + i} d={areaPath(s.points)} fill={s.color} opacity={0.12} />
       ))}
       {series.map((s, i) => (
-        <path
-          key={i}
-          d={toPath(s.points)}
-          fill="none"
-          stroke={s.color}
-          strokeWidth={s.width || 2}
-          strokeDasharray={s.dash}
-          strokeLinejoin="round"
-          strokeLinecap="round"
-        />
+        <g key={i}>
+          <path
+            d={toPath(s.points)}
+            fill="none"
+            stroke={s.color}
+            strokeWidth={s.width || 2}
+            strokeDasharray={s.dash}
+            strokeLinejoin="round"
+            strokeLinecap="round"
+          />
+          {showMarkers && s.points.map((p, j) => (
+            <circle key={'m' + j} cx={sx(p[0])} cy={sy(p[1])} r={3.5} fill="var(--surface)" stroke={s.color} strokeWidth={2} />
+          ))}
+        </g>
       ))}
       {target != null && (
         <g>

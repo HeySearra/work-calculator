@@ -1,9 +1,9 @@
 import { useStore } from '../store'
 import { fmt, fmtN } from '../format'
 import { LineChart } from '../components/Charts'
-import type { AccountItem } from '../model'
+import { computeNet, type AccountItem, type Accounts } from '../model'
 
-const GROUPS: { key: keyof ReturnType<typeof groups>; label: string; sign: 1 | -1 }[] = [
+const GROUPS: { key: keyof ReturnType<typeof useStore.getState>['S']['accounts']; label: string; sign: 1 | -1 }[] = [
   { key: 'deposits', label: '存款类', sign: 1 },
   { key: 'invest', label: '投资类', sign: 1 },
   { key: 'funds', label: '公积金', sign: 1 },
@@ -11,21 +11,16 @@ const GROUPS: { key: keyof ReturnType<typeof groups>; label: string; sign: 1 | -
   { key: 'debts', label: '负债', sign: -1 },
 ]
 
-function groups(S: ReturnType<typeof useStore.getState>['S']) {
-  return S.accounts
-}
-
 export function Assets() {
   const S = useStore((s) => s.S)
   const commit = useStore((s) => s.commit)
 
-  let net = 0
   const sums: Record<string, number> = {}
   GROUPS.forEach((g) => {
-    sums[g.key] = S.accounts[g.key].reduce((a, b) => a + b.b, 0) * g.sign
-    net += sums[g.key]
+    sums[g.key] = S.accounts[g.key].reduce((a, b) => a + (b.b || 0), 0) * g.sign
   })
 
+  const net = computeNet(S.accounts)
   const posTotal = GROUPS.filter((g) => g.sign > 0).reduce((a, g) => a + sums[g.key], 0)
 
   // 趋势图
@@ -36,13 +31,13 @@ export function Assets() {
   const step = S.trend.length <= 12 ? 2 : S.trend.length <= 24 ? 3 : 6
   const xTicks = S.trend.map((t, i) => ({ x: i, text: i % step === 0 ? t.ym.slice(5) : '' }))
 
-  function setItem(group: keyof ReturnType<typeof groups>, idx: number, patch: Partial<AccountItem>) {
+  function setItem(group: keyof Accounts, idx: number, patch: Partial<AccountItem>) {
     commit((d) => {
       const arr = d.accounts[group]
       arr[idx] = { ...arr[idx], ...patch }
     })
   }
-  function addItem(group: keyof ReturnType<typeof groups>) {
+  function addItem(group: keyof Accounts) {
     commit((d) => {
       const item: AccountItem = { n: '新账户', b: 0 }
       if (group === 'deposits' || group === 'debts') item.rate = 0
@@ -53,7 +48,7 @@ export function Assets() {
       d.accounts[group] = [...d.accounts[group], item]
     })
   }
-  function removeItem(group: keyof ReturnType<typeof groups>, idx: number) {
+  function removeItem(group: keyof Accounts, idx: number) {
     commit((d) => {
       d.accounts[group] = d.accounts[group].filter((_, i) => i !== idx)
     })

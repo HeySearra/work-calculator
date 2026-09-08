@@ -89,6 +89,41 @@ export interface TrendPoint {
   v: number
 }
 
+// 净资产分组（资产为正、负债为负），用于计算总净资产
+export const ASSET_GROUPS: { key: keyof Accounts; sign: 1 | -1 }[] = [
+  { key: 'deposits', sign: 1 },
+  { key: 'invest', sign: 1 },
+  { key: 'funds', sign: 1 },
+  { key: 'social', sign: 1 },
+  { key: 'debts', sign: -1 },
+]
+
+// 根据账户明细计算当前净资产（资产 - 负债）
+export function computeNet(accounts: Accounts): number {
+  let net = 0
+  for (const g of ASSET_GROUPS) {
+    net += (accounts[g.key] || []).reduce((a, b) => a + (b.b || 0), 0) * g.sign
+  }
+  return net
+}
+
+// 当前年月（YYYY-MM）
+export function ymNow(): string {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+}
+
+// 把当前月真实净资产 upsert 进趋势数组（同月覆盖，保留历史真实月份）
+export function upsertTrend(trend: TrendPoint[], v: number): TrendPoint[] {
+  const ym = ymNow()
+  const next = trend.slice()
+  const idx = next.findIndex((t) => t.ym === ym)
+  const point = { ym, v: Math.round(v) }
+  if (idx >= 0) next[idx] = point
+  else next.push(point)
+  return next
+}
+
 export interface AppState {
   user: User
   profile: Profile
@@ -103,18 +138,6 @@ export interface AppState {
   holidays: Record<string, number>
   accounts: Accounts
   trend: TrendPoint[]
-}
-
-function buildDemoTrend(): TrendPoint[] {
-  const arr: TrendPoint[] = []
-  let v = 290000
-  const now = new Date()
-  for (let i = 11; i >= 0; i--) {
-    v += 4000 + Math.sin(i) * 3000 + Math.random() * 2000
-    const m = (now.getMonth() - i + 12) % 12
-    arr.push({ ym: `2026-${String(m + 1).padStart(2, '0')}`, v: Math.round(v) })
-  }
-  return arr
 }
 
 export const DEFAULT: AppState = {
@@ -167,7 +190,7 @@ export const DEFAULT: AppState = {
     social: [{ n: '养老个人账户', b: 51200 }],
     debts: [{ n: '房贷', b: 25420, rate: 3.1, month: 4200, remain: 168 }],
   },
-  trend: buildDemoTrend(),
+  trend: [],
 }
 
 // 合并后端返回（可能只含部分键）与默认值，避免缺字段导致渲染崩溃
