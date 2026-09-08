@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from server.db import init_db
-from server.routers import auth, invest, io, punch, state
+from server.routers import auth, holidays, invest, io, punch, state
 
 app = FastAPI(title="打工人仪表盘 API")
 
@@ -26,6 +26,7 @@ app.include_router(state.router)
 app.include_router(punch.router)
 app.include_router(invest.router)
 app.include_router(io.router)
+app.include_router(holidays.router)
 
 
 @app.get("/health")

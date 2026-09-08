@@ -127,6 +127,21 @@ export function Settings() {
     if (fileRef.current) fileRef.current.value = ''
   }
 
+  async function loadHolidays() {
+    const year = appToday().getFullYear()
+    try {
+      const data = await api.getHolidays(year)
+      const existing = textToHolidays(fRef.current.holidays)
+      const prefix = `${year}-`
+      Object.keys(existing).forEach((k) => { if (k.startsWith(prefix)) delete existing[k] })
+      data.holidays.forEach((d) => { existing[d] = 1 })
+      data.workdays.forEach((d) => { existing[d] = 2 })
+      setField('holidays', holidaysToText(existing))
+    } catch {
+      flash('获取节假日失败')
+    }
+  }
+
   function field(label: string, k: string, type = 'text', step?: string) {
     return (
       <label className="fld">
@@ -167,10 +182,13 @@ export function Settings() {
             <div className="fld-row">
               {field('城市', 'city')}
             </div>
-            <label className="fld" style={{ marginBottom: 12 }}>
+            <label className="fld" style={{ marginBottom: 8 }}>
               <span>节假日（例 10-01* 表示补班，多个用英文逗号分隔）</span>
               <input value={f.holidays} onChange={(e) => setField('holidays', e.target.value)} placeholder="10-01,10-02,10-01*" />
             </label>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+              <button className="btn ghost" style={{ padding: '6px 12px', fontSize: 12 }} onClick={loadHolidays}>获取 {appToday().getFullYear()} 年法定节假日</button>
+            </div>
             <div className="radio-group">
               <label className="radio-card">
                 <input type="radio" name="unpunched" value="standard" checked={f.unpunchedMode === 'standard'} onChange={(e) => setField('unpunchedMode', e.target.value)} />

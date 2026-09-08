@@ -76,4 +76,8 @@ export const api = {
     const r = await req('/api/import', { method: 'POST', body: JSON.stringify(obj) })
     return r.json()
   },
+  async getHolidays(year: number): Promise<{ year: number; holidays: string[]; workdays: string[] }> {
+    const r = await req(`/api/holidays/${year}`)
+    return r.json()
+  },
 }
