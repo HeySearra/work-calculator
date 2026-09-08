@@ -11,6 +11,10 @@ node_modules/
 web/dist/
 *.tsbuildinfo
 
+# ---- tsc -b 误生成（vite.config.ts 的编译产物，勿提交）----
+web/vite.config.js
+web/vite.config.d.ts
+
 # ---- 环境变量 / 密钥（运行时注入，勿提交）----
 .env
 *.local

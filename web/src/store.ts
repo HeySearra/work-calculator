@@ -38,7 +38,7 @@ export const useStore = create<Store>((set, get) => ({
   },
   loadState: async () => {
     const s = await api.getState()
-    set({ S: s, ready: true })
+    set({ S: mergeState(s), ready: true })
   },
   update: (fn) => {
     const next = structuredClone(get().S)

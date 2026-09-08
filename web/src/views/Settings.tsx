@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { useStore } from '../store'
-import { DEFAULT, mergeState } from '../model'
+import { DEFAULT, mergeState, BENCH_PRESETS } from '../model'
 import { fmt, appToday } from '../format'
 import { holidaysToText, textToHolidays, dailyPay, payDays } from '../calc'
 import { api } from '../api'
@@ -27,10 +27,11 @@ export function Settings() {
       bonus: String(p.bonus), bonusAmort: p.bonusAmort ? '1' : '0', unpunchedMode: p.unpunchedMode,
       city: S.user.city,
       payType: py.type, payDay: String(py.day), payRule: py.rule, payAmt: String(py.amount),
-      pnPaid: String(pn.paid), pnPers: String(pn.personal), pnWage: String(pn.wage),
+      pnPaidMonths: String(pn.paidMonths), pnMinMonths: String(pn.minMonths),
+      pnPers: String(pn.personal), pnWage: String(pn.wage),
       pnIdx: String(pn.idx), pnRate: String(pn.rate), pnAge: String(pn.age),
       frTgt: String(fr.target), frSpend: String(fr.spend), frSave: String(fr.save), frRate: String(fr.rate),
-      ivTgt: String(iv.target), ivBench: iv.benchmark, ivBenchV: iv.benchMonthly.join(','), ivBase: String(iv.base),
+      ivTgt: String(iv.target), ivBench: iv.benchmark, ivBase: String(iv.base),
       holidays: holidaysToText(S.holidays),
     }
   })
@@ -47,11 +48,11 @@ export function Settings() {
       p.bonus = num('bonus'); p.bonusAmort = f.bonusAmort === '1'; p.unpunchedMode = (f.unpunchedMode as 'standard' | 'off')
       d.user.city = f.city
       py.type = (f.payType as 'current_month' | 'next_month'); py.day = num('payDay'); py.rule = (f.payRule as 'advance' | 'delay' | 'same'); py.amount = num('payAmt')
-      pn.paid = num('pnPaid'); pn.personal = num('pnPers'); pn.wage = num('pnWage'); pn.idx = num('pnIdx'); pn.rate = num('pnRate'); pn.age = num('pnAge')
+      pn.paidMonths = num('pnPaidMonths'); pn.minMonths = num('pnMinMonths'); pn.paid = pn.paidMonths / 12
+      pn.personal = num('pnPers'); pn.wage = num('pnWage'); pn.idx = num('pnIdx'); pn.rate = num('pnRate'); pn.age = num('pnAge')
       fr.target = num('frTgt'); fr.spend = num('frSpend'); fr.save = num('frSave'); fr.rate = num('frRate')
-      iv.target = num('ivTgt'); iv.benchmark = f.ivBench
-      const bm = f.ivBenchV.split(',').map((s) => parseFloat(s.trim())).filter((x) => isFinite(x))
-      iv.benchMonthly = bm.length === 12 ? bm : [...DEFAULT.invest.benchMonthly]
+      iv.target = num('ivTgt')
+      iv.benchmark = f.ivBench
       iv.base = num('ivBase')
       d.holidays = textToHolidays(f.holidays)
     }).then(() => setMsg('设置已保存')).catch(() => setMsg('保存失败'))
@@ -104,86 +105,101 @@ export function Settings() {
   return (
     <div>
       {msg && <div className="toast-inline">{msg}</div>}
-      <div className="grid">
-        <div className="card">
-          <h3>作息与薪资</h3>
-          <div className="fld-row">
-            {field('上班', 'workStart', 'time')}
-            {field('下班', 'workEnd', 'time')}
-            {field('午休起', 'lunchStart', 'time')}
-            {field('午休止', 'lunchEnd', 'time')}
-          </div>
-          <div className="fld-row">
-            {field('月薪', 'salary', 'number')}
-            {field('周末加班倍数', 'otWe', 'number', '0.1')}
-            {field('工作日加班倍数', 'otW', 'number', '0.1')}
-          </div>
-          <div className="fld-row">
-            {field('入职日期', 'hireDate', 'date')}
-            {field('年终奖', 'bonus', 'number')}
-          </div>
-          <label className="fld">
-            <span>年终奖分摊到月薪</span>
-            <select value={f.bonusAmort} onChange={(e) => setF('bonusAmort', e.target.value)}>
-              <option value="0">不摊</option><option value="1">分摊</option>
-            </select>
-          </label>
-          <div className="fld-row">
-            {field('城市', 'city')}
-            {field('节假日(例 10-01* 表示补班)', 'holidays')}
-          </div>
-          <div className="radio-group">
-            <label className="radio-card">
-              <input type="radio" name="unpunched" value="standard" checked={f.unpunchedMode === 'standard'} onChange={(e) => setF('unpunchedMode', e.target.value)} />
-              <span>按默认作息（未打卡的工作日按规定上下班时间计算时长）</span>
+      <div className="settings-grid">
+        <div className="settings-col">
+          <div className="card">
+            <h3>作息与薪资</h3>
+            <div className="fld-row">
+              {field('上班', 'workStart', 'time')}
+              {field('下班', 'workEnd', 'time')}
+              {field('午休起', 'lunchStart', 'time')}
+              {field('午休止', 'lunchEnd', 'time')}
+            </div>
+            <div className="fld-row">
+              {field('月薪', 'salary', 'number')}
+              {field('周末加班倍数', 'otWe', 'number', '0.1')}
+              {field('工作日加班倍数', 'otW', 'number', '0.1')}
+            </div>
+            <div className="fld-row">
+              {field('入职日期', 'hireDate', 'date')}
+              {field('年终奖', 'bonus', 'number')}
+            </div>
+            <label className="fld">
+              <span>年终奖分摊到月薪</span>
+              <select value={f.bonusAmort} onChange={(e) => setF('bonusAmort', e.target.value)}>
+                <option value="0">不摊</option><option value="1">分摊</option>
+              </select>
             </label>
-            <label className="radio-card">
-              <input type="radio" name="unpunched" value="off" checked={f.unpunchedMode === 'off'} onChange={(e) => setF('unpunchedMode', e.target.value)} />
-              <span>视为当天没上班（未打卡的工作日不计入在司时长）</span>
-            </label>
-          </div>
-          <div className="hint">本月 <b>{pd}</b> 天 · 日薪 <b>{fmt(dp)}</b></div>
-        </div>
-
-        <div className="card">
-          <h3>发薪日</h3>
-          <div className="fld-row">
-            {field('类型', 'payType')}
-            {field('日期', 'payDay', 'number')}
-            {field('规则', 'payRule')}
-            {field('金额', 'payAmt', 'number')}
-          </div>
-          <h3 style={{ marginTop: 12 }}>养老账户</h3>
-          <div className="fld-row">
-            {field('已缴年数', 'pnPaid', 'number')}
-            {field('个人账户', 'pnPers', 'number')}
-            {field('缴费工资', 'pnWage', 'number')}
-          </div>
-          <div className="fld-row">
-            {field('计发指数', 'pnIdx', 'number', '0.01')}
-            {field('记账利率%', 'pnRate', 'number', '0.1')}
-            {field('退休年龄', 'pnAge', 'number')}
+            <div className="fld-row">
+              {field('城市', 'city')}
+              {field('节假日(例 10-01* 表示补班)', 'holidays')}
+            </div>
+            <div className="radio-group">
+              <label className="radio-card">
+                <input type="radio" name="unpunched" value="standard" checked={f.unpunchedMode === 'standard'} onChange={(e) => setF('unpunchedMode', e.target.value)} />
+                <span>按默认作息（未打卡的工作日按规定上下班时间计算时长）</span>
+              </label>
+              <label className="radio-card">
+                <input type="radio" name="unpunched" value="off" checked={f.unpunchedMode === 'off'} onChange={(e) => setF('unpunchedMode', e.target.value)} />
+                <span>视为当天没上班（未打卡的工作日不计入在司时长）</span>
+              </label>
+            </div>
+            <div className="hint">本月 <b>{pd}</b> 天 · 日薪 <b>{fmt(dp)}</b></div>
           </div>
         </div>
 
-        <div className="card">
-          <h3>FIRE</h3>
-          <div className="fld-row">
-            {field('目标', 'frTgt', 'number')}
-            {field('年支出', 'frSpend', 'number')}
-            {field('月储蓄', 'frSave', 'number')}
-            {field('年化%', 'frRate', 'number', '0.1')}
+        <div className="settings-col">
+          <div className="card">
+            <h3>发薪日</h3>
+            <div className="fld-row">
+              {field('类型', 'payType')}
+              {field('日期', 'payDay', 'number')}
+              {field('规则', 'payRule')}
+              {field('金额', 'payAmt', 'number')}
+            </div>
           </div>
-          <h3 style={{ marginTop: 12 }}>投资</h3>
-          <div className="fld-row">
-            {field('目标年化%', 'ivTgt', 'number', '0.1')}
-            {field('基准', 'ivBench')}
-            {field('本金', 'ivBase', 'number')}
+          <div className="card">
+            <h3>FIRE</h3>
+            <div className="fld-row">
+              {field('目标', 'frTgt', 'number')}
+              {field('年支出', 'frSpend', 'number')}
+              {field('月储蓄', 'frSave', 'number')}
+              {field('年化%', 'frRate', 'number', '0.1')}
+            </div>
           </div>
-          <label className="fld">
-            <span>基准月度收益%(逗号分隔 12 个)</span>
-            <input value={f.ivBenchV} onChange={(e) => setF('ivBenchV', e.target.value)} />
-          </label>
+        </div>
+
+        <div className="settings-col">
+          <div className="card">
+            <h3>养老账户</h3>
+            <div className="fld-row">
+              {field('已缴费月数', 'pnPaidMonths', 'number')}
+              {field('最低缴费月数', 'pnMinMonths', 'number')}
+              {field('个人账户', 'pnPers', 'number')}
+              {field('缴费工资', 'pnWage', 'number')}
+            </div>
+            <div className="fld-row">
+              {field('计发指数', 'pnIdx', 'number', '0.01')}
+              {field('记账利率%', 'pnRate', 'number', '0.1')}
+              {field('退休年龄', 'pnAge', 'number')}
+            </div>
+          </div>
+          <div className="card">
+            <h3>投资</h3>
+            <div className="fld-row">
+              {field('目标年化%', 'ivTgt', 'number', '0.1')}
+              {field('本金', 'ivBase', 'number')}
+            </div>
+            <label className="fld">
+              <span>基准指数</span>
+              <select value={f.ivBench} onChange={(e) => setF('ivBench', e.target.value)}>
+                {BENCH_PRESETS.map((p) => (
+                  <option key={p.key} value={p.key}>{p.name}</option>
+                ))}
+              </select>
+            </label>
+            <p className="hint">各指数的月度收益率请到「投资」页编辑（一次录入多指数，按需切换）</p>
+          </div>
         </div>
       </div>
 

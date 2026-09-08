@@ -146,15 +146,24 @@ export interface InvestCalc {
   cum: (number | null)[]
   bc: (number | null)[]
   monthly: number[] // 周度模式下按月聚合
-  n: number
+  n: number          // 截至当前已过去的月份数（保证 0 月份也进图）
   last: number
   bl: number
   ann: number
   exc: number
   amt: number
+  // 进阶指标
+  bestMonth: number    // 最大单月 %
+  worstMonth: number   // 最小单月 %（负）
+  winRate: number      // 胜率：正收益月份占比 0-1
+  maxDD: number        // 最大回撤 %
+  streak: number       // 连续正超额（从末尾往回数）
+  excess: number[]     // 每月超额 = monthly - bench
 }
 export function computeInvest(S: AppState, freq: 'monthly' | 'weekly'): InvestCalc {
-  const bench = S.invest.benchMonthly
+  // 当前选中的基准指数（多指数支持），缺位补 0
+  const benchSource = S.invest.bench?.[S.invest.benchmark] || S.invest.bench?.csi300 || []
+  const bench = Array.from({ length: 12 }, (_, i) => Number(benchSource[i] ?? 0) || 0)
   let monthly: number[]
   if (freq === 'weekly') {
     const arr = S.weekly.length === 52 ? S.weekly : new Array(52).fill(0)
@@ -166,10 +175,16 @@ export function computeInvest(S: AppState, freq: 'monthly' | 'weekly'): InvestCa
       return (c - 1) * 100
     })
   } else {
-    monthly = S.monthly.map((d) => (d ? d.r : 0))
+    // 月度：补齐 12 项，缺失月份按 0 计；避免 n 算法把 undefined 当非零导致 cum 变 NaN
+    monthly = Array.from({ length: 12 }, (_, i) => {
+      const d = S.monthly[i]
+      return d ? d.r : 0
+    })
   }
-  let n = 0
-  for (let i = 0; i < 12; i++) if (monthly[i] !== 0) n = i + 1
+  // 截至当前已过去的月份数：保证 0 月份也进图（不剔除）
+  const today = appToday()
+  const n = Math.min(12, today.getMonth() + 1)
+
   const cum: (number | null)[] = []
   const bc: (number | null)[] = []
   let cAll = 1, bAll = 1
@@ -186,10 +201,56 @@ export function computeInvest(S: AppState, freq: 'monthly' | 'weekly'): InvestCa
   const ann = n > 0 ? (Math.pow(1 + last / 100, 12 / n) - 1) * 100 : 0
   const exc = last - bl
   const amt = S.invest.base * last / 100
-  return { cum, bc, monthly, n, last, bl, ann, exc, amt }
+
+  // 月超额（月收益 − 基准）
+  const excess: number[] = []
+  for (let i = 0; i < 12; i++) excess.push(i < n ? monthly[i] - bench[i] : 0)
+
+  // 最大/最小单月 + 胜率
+  let bestMonth = 0, worstMonth = 0, wins = 0
+  for (let i = 0; i < n; i++) {
+    if (monthly[i] > bestMonth) bestMonth = monthly[i]
+    if (monthly[i] < worstMonth) worstMonth = monthly[i]
+    if (monthly[i] > 0) wins++
+  }
+  const winRate = n > 0 ? wins / n : 0
+
+  // 最大回撤（基于累计收益 cum 序列）
+  let peak = -Infinity, maxDD = 0
+  for (let i = 0; i < n; i++) {
+    const v = cum[i] ?? 0
+    if (v > peak) peak = v
+    const dd = peak - v
+    if (dd > maxDD) maxDD = dd
+  }
+
+  // 连续正超额（从末尾往回数）
+  let streak = 0
+  for (let i = n - 1; i >= 0; i--) {
+    if (excess[i] > 0) streak++
+    else break
+  }
+
+  return { cum, bc, monthly, n, last, bl, ann, exc, amt, bestMonth, worstMonth, winRate, maxDD, streak, excess }
 }
 
-// ---------- FIRE 达成预测 ----------
+// ---------- 发工资周期进度（pay.last → pay.next） ----------
+export interface PayPeriod {
+  passD: number
+  totalD: number
+  pct: number
+  earned: number
+}
+// 从上一次发薪日到下一次发薪日的天数进度 + 预计到账
+export function payPeriod(now: Date, py: Payday, amount: number): PayPeriod {
+  const r = computePayday(now, py)
+  const totalD = Math.max(1, Math.round((r.next.getTime() - r.last.getTime()) / 86400000))
+  const passD = Math.max(0, Math.round((now.getTime() - r.last.getTime()) / 86400000))
+  const pct = Math.max(0, Math.min(1, passD / totalD))
+  return { passD, totalD, pct, earned: amount * pct }
+}
+
+
 export function fireProjection(target: number, save: number, rate: number): { months: number; year: number; month: number } {
   const i = rate / 100 / 12
   const net = 0 // 用 net 由调用方传入资产；此处返回相对当前净资产的补足月数

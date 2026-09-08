@@ -28,7 +28,9 @@ export interface Payday {
 }
 
 export interface Pension {
-  paid: number
+  paid: number        // 已缴年限（展示用，保留兼容）
+  paidMonths: number  // 已缴月数（精确输入）
+  minMonths: number   // 领退休金最低缴费月数
   personal: number
   wage: number
   idx: number
@@ -45,10 +47,19 @@ export interface Fire {
 
 export interface Invest {
   target: number
-  benchmark: string
-  benchMonthly: number[]
+  benchmark: string          // 当前选中的基准指数 key
+  bench: Record<string, number[]>  // 多个指数的月度收益率（%），每个长度 12
   base: number
 }
+
+// 常用基准指数预设
+export const BENCH_PRESETS: { key: string; name: string }[] = [
+  { key: 'csi300', name: '沪深300' },
+  { key: 'csi500', name: '中证500' },
+  { key: 'gem', name: '创业板指' },
+  { key: 'nasdaq', name: '纳斯达克' },
+  { key: 'bond', name: '中证全债' },
+]
 
 export interface AccountItem {
   n: string
@@ -123,12 +134,18 @@ export const DEFAULT: AppState = {
     unpunchedMode: 'standard',
   },
   payday: { type: 'next_month', day: 15, rule: 'advance', amount: 13500 },
-  pension: { paid: 8.25, personal: 51200, wage: 8321, idx: 1.0, rate: 4, age: 50 },
+  pension: { paid: 8.25, paidMonths: 99, minMonths: 180, personal: 51200, wage: 8321, idx: 1.0, rate: 4, age: 50 },
   fire: { target: 1000000, spend: 40000, save: 6000, rate: 5 },
   invest: {
     target: 6,
     benchmark: 'csi300',
-    benchMonthly: [-2.1, 2.3, 0.5, -1.0, 1.4, 0.9, -1.8, 2.0, 1.1, -0.4, 1.6, 0.7],
+    bench: {
+      csi300: [-2.1, 2.3, 0.5, -1.0, 1.4, 0.9, -1.8, 2.0, 1.1, -0.4, 1.6, 0.7],
+      csi500: [-1.5, 2.8, 0.3, -1.2, 1.6, 1.1, -2.0, 2.3, 1.3, -0.6, 1.8, 0.9],
+      gem: [-3.0, 3.5, 0.0, -1.5, 2.0, 1.5, -2.5, 2.8, 1.5, -0.8, 2.2, 1.0],
+      nasdaq: [3.0, 4.2, -1.0, 2.5, 1.8, 3.5, 2.0, 4.0, 1.5, 0.5, 5.0, 2.0],
+      bond: [0.5, 0.3, 0.6, 0.4, 0.5, 0.4, 0.6, 0.5, 0.4, 0.5, 0.4, 0.5],
+    },
     base: 156000,
   },
   weekly: [],
@@ -162,9 +179,47 @@ export function mergeState(v: Partial<AppState> | null | undefined): AppState {
     user: { ...DEFAULT.user, ...(v.user || {}) },
     profile: { ...DEFAULT.profile, ...(v.profile || {}) },
     payday: { ...DEFAULT.payday, ...(v.payday || {}) },
-    pension: { ...DEFAULT.pension, ...(v.pension || {}) },
+    pension: (() => {
+      const p = { ...DEFAULT.pension, ...(v.pension || {}) }
+      if (v.pension && typeof v.pension.paidMonths !== 'number') {
+        p.paidMonths = Math.round((p.paid || 0) * 12)
+      }
+      if (v.pension && typeof v.pension.minMonths !== 'number') {
+        p.minMonths = 180
+      }
+      return p
+    })(),
     fire: { ...DEFAULT.fire, ...(v.fire || {}) },
-    invest: { ...DEFAULT.invest, ...(v.invest || {}) },
+    invest: (() => {
+      const vInv: any = v.invest || {}
+      const merged: any = { ...DEFAULT.invest, ...vInv }
+      // 旧数据兼容：如果只有 benchMonthly 数组，迁到 bench.csi300
+      if (Array.isArray(vInv.benchMonthly) && vInv.benchMonthly.length > 0 && !vInv.bench) {
+        merged.bench = { ...DEFAULT.invest.bench, csi300: vInv.benchMonthly }
+      }
+      // 旧数据兼容：合并每个 bench 索引，缺位补 0
+      if (merged.bench && typeof merged.bench === 'object') {
+        const next: Record<string, number[]> = {}
+        for (const key of Object.keys(DEFAULT.invest.bench)) {
+          const arr = merged.bench[key]
+          next[key] = Array.from({ length: 12 }, (_, i) => Number(Array.isArray(arr) ? arr[i] : NaN) || 0)
+        }
+        // 保留旧数据里独有的指数
+        for (const key of Object.keys(merged.bench)) {
+          if (!(key in next) && Array.isArray(merged.bench[key])) {
+            next[key] = Array.from({ length: 12 }, (_, i) => Number(merged.bench[key][i]) || 0)
+          }
+        }
+        merged.bench = next
+      } else {
+        merged.bench = { ...DEFAULT.invest.bench }
+      }
+      // 旧数据兼容：当前 benchmark key 不在新 bench 里，回退到 csi300
+      if (!merged.bench[merged.benchmark]) {
+        merged.benchmark = 'csi300'
+      }
+      return merged
+    })(),
     accounts: { ...DEFAULT.accounts, ...(v.accounts || {}) },
     weekly: v.weekly || [],
     monthly: v.monthly || [],

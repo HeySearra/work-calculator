@@ -40,12 +40,12 @@ export function Fire() {
       </div>
 
       <div className="grid" style={{ marginBottom: 14 }}>
-        <div className="card">
+        <div className="card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           <div className="lbl" style={{ color: 'var(--text-2)', fontSize: 13, marginBottom: 8 }}>年支出</div>
           <div className="big tnum" style={{ fontSize: 22 }}>{fmt(F.spend)}</div>
           <div className="hint">4% 法则需本金 {fmt(F.spend / 0.04)}</div>
         </div>
-        <div className="card">
+        <div className="card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           <div className="lbl" style={{ color: 'var(--text-2)', fontSize: 13, marginBottom: 8 }}>月储蓄</div>
           <div className="big tnum" style={{ fontSize: 22 }}>{fmt(F.save)}</div>
           <div className="hint">储蓄率 {(saveRate * 100).toFixed(0)}%</div>
