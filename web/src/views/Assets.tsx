@@ -43,7 +43,13 @@ export function Assets() {
   }
   function addItem(group: keyof ReturnType<typeof groups>) {
     commit((d) => {
-      d.accounts[group] = [...d.accounts[group], { n: '新账户', b: 0, rate: group === 'debts' ? 0 : undefined }]
+      const item: AccountItem = { n: '新账户', b: 0 }
+      if (group === 'deposits' || group === 'debts') item.rate = 0
+      if (group === 'debts') {
+        item.month = 0
+        item.remain = 0
+      }
+      d.accounts[group] = [...d.accounts[group], item]
     })
   }
   function removeItem(group: keyof ReturnType<typeof groups>, idx: number) {
@@ -87,37 +93,75 @@ export function Assets() {
             </h3>
             <div className="list">
               {S.accounts[g.key].map((a, idx) => (
-                <div className="list-item" key={idx} style={{ flexWrap: 'wrap', gap: 6 }}>
-                  <input
-                    value={a.n}
-                    onChange={(e) => setItem(g.key, idx, { n: e.target.value })}
-                    style={{ flex: '1 1 90px', minWidth: 90, width: 'auto' }}
-                  />
-                  <input
-                    type="number"
-                    value={a.b}
-                    onChange={(e) => setItem(g.key, idx, { b: Number(e.target.value) })}
-                    style={{ flex: '0 0 110px', width: 'auto', textAlign: 'right' }}
-                  />
-                  {a.rate != null && (
-                    <input
-                      type="number" step="0.1"
-                      value={a.rate}
-                      onChange={(e) => setItem(g.key, idx, { rate: Number(e.target.value) })}
-                      title="年利率%"
-                      style={{ flex: '0 0 64px', width: 'auto', textAlign: 'center' }}
-                    />
-                  )}
-                  {g.key === 'debts' && (
-                    <input
-                      type="number"
-                      value={a.month ?? 0}
-                      onChange={(e) => setItem(g.key, idx, { month: Number(e.target.value) })}
-                      title="月供"
-                      style={{ flex: '0 0 64px', width: 'auto', textAlign: 'center' }}
-                    />
-                  )}
-                  <button className="icon-btn" onClick={() => removeItem(g.key, idx)} title="删除">×</button>
+                <div
+                  className="list-item"
+                  key={idx}
+                  style={{ flexDirection: 'column', alignItems: 'stretch', gap: 10, padding: '12px 4px' }}
+                >
+                  {/* 第一行：账户名称 + 删除 */}
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+                    <label className="fld" style={{ flex: 1 }}>
+                      <span>账户名称</span>
+                      <input
+                        value={a.n}
+                        onChange={(e) => setItem(g.key, idx, { n: e.target.value })}
+                        placeholder="例如：招商银行活期"
+                      />
+                    </label>
+                    <button className="icon-btn" onClick={() => removeItem(g.key, idx)} title="删除">×</button>
+                  </div>
+
+                  {/* 第二行：金额 / 利率 / 月供 / 剩余月数 */}
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+                    <label className="fld" style={{ flex: '1 1 110px' }}>
+                      <span>金额</span>
+                      <input
+                        type="number"
+                        value={a.b}
+                        onChange={(e) => setItem(g.key, idx, { b: Number(e.target.value) })}
+                        placeholder="0"
+                        style={{ textAlign: 'right' }}
+                      />
+                    </label>
+
+                    {a.rate != null && (
+                      <label className="fld" style={{ flex: '0 0 78px' }}>
+                        <span>年利率%</span>
+                        <input
+                          type="number" step="0.1"
+                          value={a.rate}
+                          onChange={(e) => setItem(g.key, idx, { rate: Number(e.target.value) })}
+                          placeholder="0"
+                          style={{ textAlign: 'center' }}
+                        />
+                      </label>
+                    )}
+
+                    {g.key === 'debts' && (
+                      <>
+                        <label className="fld" style={{ flex: '0 0 78px' }}>
+                          <span>月供</span>
+                          <input
+                            type="number"
+                            value={a.month ?? 0}
+                            onChange={(e) => setItem(g.key, idx, { month: Number(e.target.value) })}
+                            placeholder="0"
+                            style={{ textAlign: 'right' }}
+                          />
+                        </label>
+                        <label className="fld" style={{ flex: '0 0 78px' }}>
+                          <span>剩余月数</span>
+                          <input
+                            type="number"
+                            value={a.remain ?? 0}
+                            onChange={(e) => setItem(g.key, idx, { remain: Number(e.target.value) })}
+                            placeholder="0"
+                            style={{ textAlign: 'right' }}
+                          />
+                        </label>
+                      </>
+                    )}
+                  </div>
                 </div>
               ))}
               {S.accounts[g.key].length === 0 && <div className="hint" style={{ padding: '6px 0' }}>暂无，点 ＋ 添加</div>}
