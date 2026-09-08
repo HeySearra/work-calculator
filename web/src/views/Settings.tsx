@@ -166,8 +166,11 @@ export function Settings() {
             </label>
             <div className="fld-row">
               {field('城市', 'city')}
-              {field('节假日(例 10-01* 表示补班)', 'holidays')}
             </div>
+            <label className="fld" style={{ marginBottom: 12 }}>
+              <span>节假日（例 10-01* 表示补班，多个用英文逗号分隔）</span>
+              <input value={f.holidays} onChange={(e) => setField('holidays', e.target.value)} placeholder="10-01,10-02,10-01*" />
+            </label>
             <div className="radio-group">
               <label className="radio-card">
                 <input type="radio" name="unpunched" value="standard" checked={f.unpunchedMode === 'standard'} onChange={(e) => setField('unpunchedMode', e.target.value)} />
@@ -214,6 +217,22 @@ export function Settings() {
               {field('年化%', 'frRate', 'number', '0.1')}
             </div>
           </div>
+          <div className="card">
+            <h3>投资</h3>
+            <div className="fld-row">
+              {field('目标年化%', 'ivTgt', 'number', '0.1')}
+              {field('本金', 'ivBase', 'number')}
+            </div>
+            <label className="fld">
+              <span>基准指数</span>
+              <select value={f.ivBench} onChange={(e) => setField('ivBench', e.target.value)}>
+                {BENCH_PRESETS.map((p) => (
+                  <option key={p.key} value={p.key}>{p.name}</option>
+                ))}
+              </select>
+            </label>
+            <p className="hint">各指数的月度收益率请到「投资」页编辑（一次录入多指数，按需切换）</p>
+          </div>
         </div>
 
         <div className="settings-col">
@@ -238,22 +257,6 @@ export function Settings() {
               {field('单位缴费%', 'pnAnnComp', 'number', '0.1')}
               {field('个人缴费%', 'pnAnnPers', 'number', '0.1')}
             </div>
-          </div>
-          <div className="card">
-            <h3>投资</h3>
-            <div className="fld-row">
-              {field('目标年化%', 'ivTgt', 'number', '0.1')}
-              {field('本金', 'ivBase', 'number')}
-            </div>
-            <label className="fld">
-              <span>基准指数</span>
-              <select value={f.ivBench} onChange={(e) => setField('ivBench', e.target.value)}>
-                {BENCH_PRESETS.map((p) => (
-                  <option key={p.key} value={p.key}>{p.name}</option>
-                ))}
-              </select>
-            </label>
-            <p className="hint">各指数的月度收益率请到「投资」页编辑（一次录入多指数，按需切换）</p>
           </div>
         </div>
       </div>
