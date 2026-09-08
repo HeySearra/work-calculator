@@ -80,4 +80,8 @@ export const api = {
     const r = await req(`/api/holidays/${year}`)
     return r.json()
   },
+  async syncBenchmarks(): Promise<{ updated: string; data: Record<string, Record<string, number>> }> {
+    const r = await req(`/api/benchmarks/sync`)
+    return r.json()
+  },
 }

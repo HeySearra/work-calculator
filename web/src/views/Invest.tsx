@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useStore } from '../store'
 import { fmt } from '../format'
+import { api } from '../api'
 import { computeInvest, computeRating, getNetAssetRange } from '../calc'
 import { LineChart } from '../components/Charts'
 import { BENCH_PRESETS } from '../model'
@@ -9,6 +10,8 @@ export function Invest() {
   const S = useStore((s) => s.S)
   const commit = useStore((s) => s.commit)
   const [freq, setFreq] = useState<'monthly' | 'weekly'>('monthly')
+  const [syncing, setSyncing] = useState(false)
+  const [syncMsg, setSyncMsg] = useState('')
 
   const calc = computeInvest(S, freq)
   const rating = computeRating(calc.last, calc.bl)
@@ -63,6 +66,33 @@ export function Invest() {
       if (!d.invest.bench[k]) d.invest.bench[k] = Array.from({ length: 12 }, () => 0)
       d.invest.bench[k][i] = v
     })
+  }
+  // 一键同步基准指数月度收益率（东方财富行情，回填已过去的完整月，不覆盖当前/未来月）
+  async function syncBench() {
+    setSyncing(true)
+    setSyncMsg('')
+    try {
+      const res = await api.syncBenchmarks()
+      const year = new Date().getFullYear()
+      const curMonth = new Date().getMonth() + 1  // 1-12
+      commit((d) => {
+        if (!d.invest.bench) d.invest.bench = {}
+        for (const p of BENCH_PRESETS) {
+          const rates = res.data[p.key] || {}
+          const existing = d.invest.bench[p.key]
+          const target: number[] = existing && existing.length === 12 ? existing : (d.invest.bench[p.key] = new Array(12).fill(0))
+          for (let m = 1; m < curMonth; m++) {
+            const key = `${year}-${String(m).padStart(2, '0')}`
+            if (key in rates) target[m - 1] = rates[key]
+          }
+        }
+      })
+      setSyncMsg(`已更新 ${Object.keys(res.data).length} 个指数，截至 ${res.updated}（当前月与未来月留空）`)
+    } catch (e: any) {
+      setSyncMsg('同步失败：' + (e?.message || e))
+    } finally {
+      setSyncing(false)
+    }
   }
 
   return (
@@ -274,7 +304,12 @@ export function Invest() {
           )}
         </div>
         <div className="card">
-          <h3>基准指数（可编辑）</h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+            <h3 style={{ margin: 0 }}>基准指数</h3>
+            <button className="btn ghost" onClick={syncBench} disabled={syncing} style={{ fontSize: 12, padding: '6px 10px' }}>
+              {syncing ? '同步中…' : '同步基准指数'}
+            </button>
+          </div>
           <label className="fld" style={{ marginBottom: 10 }}>
             <span>当前使用</span>
             <select value={benchKey} onChange={(e) => setBenchIndex(e.target.value)}>
@@ -305,6 +340,7 @@ export function Invest() {
             </tbody>
           </table>
           <div className="hint" style={{ marginTop: 8 }}>本金基数 {fmt(S.invest.base)}</div>
+          {syncMsg && <div className="hint" style={{ marginTop: 6, color: 'var(--brand-2)' }}>{syncMsg}</div>}
         </div>
       </div>
     </div>
