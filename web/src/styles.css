@@ -87,9 +87,9 @@ body {
 .card h3 { margin: 0 0 12px; font-size: 14px; color: var(--text-2); font-weight: 600; }
 .card.pad0 { padding: 0; }
 .summary { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; box-shadow: var(--shadow); }
-.summary .big { font-size: 30px; font-weight: 700; font-variant-numeric: tabular-nums; }
-.summary .lbl { color: var(--text-2); font-size: 13px; margin-bottom: 6px; }
-.summary .sub { color: var(--text-3); font-size: 12.5px; margin-top: 8px; }
+.summary .big { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; margin: 6px 0 4px; line-height: 1.15; }
+.summary .lbl { color: var(--text-2); font-size: 13px; }
+.summary .sub { color: var(--text-3); font-size: 12.5px; }
 
 /* 净资产页顶部三卡片（与其他 tab 的 td-card 风格统一：左对齐、等字号） */
 .asset-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 14px; }
