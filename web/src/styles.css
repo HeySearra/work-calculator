@@ -345,9 +345,8 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--b
 @media (max-width: 860px) {
   .inv-grid { grid-template-columns: 1fr; }
 }
-.inv-bars { display: flex; align-items: flex-end; gap: 4px; height: 120px; }
-.inv-bars .bar { flex: 1; border-radius: 4px 4px 0 0; min-height: 2px; position: relative; }
-.inv-bars .bar span { position: absolute; top: -16px; left: 0; right: 0; font-size: 10px; text-align: center; color: var(--text-3); }
+.inv-bars { display: flex; align-items: flex-end; gap: 4px; height: 48px; }
+.inv-bars .bar { flex: 1; border-radius: 3px 3px 0 0; min-height: 2px; }
 
 /* 设置页表单 */
 .toast-inline { background: color-mix(in srgb, var(--brand-2) 14%, transparent); color: var(--brand-2); border-radius: 10px; padding: 9px 12px; font-size: 13px; font-weight: 600; margin-bottom: 14px; }

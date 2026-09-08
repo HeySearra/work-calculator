@@ -17,7 +17,7 @@ export function Invest() {
   const yMax = Math.max(...all) * 1.1
   const cumPts = calc.cum.map((v, i) => [i, v] as [number, number]).filter((p) => p[1] != null)
   const bcPts = calc.bc.map((v, i) => [i, v] as [number, number]).filter((p) => p[1] != null)
-  const xTicks = [0, 3, 6, 9, 11].map((i) => ({ x: i, text: freq === 'monthly' ? (S.monthly[i]?.y.slice(5) || `${i + 1}`) : `${i + 1}月` }))
+  const xTicks = [0, 2, 4, 6, 8, 10, 11].map((i) => ({ x: i, text: String(i + 1).padStart(2, '0') }))
 
   // 当前选中的指数
   const benchKey = S.invest.benchmark
@@ -98,7 +98,7 @@ export function Invest() {
       <div className="card" style={{ marginBottom: 14 }}>
         <h3>累计收益曲线</h3>
         <LineChart
-          width={560} height={220}
+          width={1100} height={240}
           x0={0} x1={11}
           yMin={yMin} yMax={yMax}
           series={[
@@ -108,15 +108,13 @@ export function Invest() {
           xTicks={xTicks}
           yFormat={(n) => n.toFixed(0) + '%'}
         />
-        <div className="inv-bars" style={{ marginTop: 10 }}>
+        <div className="inv-bars" style={{ marginTop: 4 }}>
           {calc.monthly.map((r, i) => (
             <div key={i} className="bar" title={`${i + 1}月 ${r >= 0 ? '+' : ''}${r.toFixed(1)}%`}
-              style={{ height: `${Math.min(100, Math.abs(r) * 4)}%`, background: r >= 0 ? 'var(--up)' : 'var(--down)', opacity: i < calc.n ? 1 : 0.25 }}>
-              <span>{r >= 0 ? '+' : ''}{r.toFixed(0)}</span>
-            </div>
+              style={{ height: `${Math.min(100, Math.abs(r) * 4)}%`, background: r >= 0 ? 'var(--up)' : 'var(--down)', opacity: i < calc.n ? 1 : 0.25 }} />
           ))}
         </div>
-        <div className="hint">灰虚线={benchName} · 柱=各月收益率（仅已记录月份实色）</div>
+        <div className="hint" style={{ marginTop: 4 }}>灰虚线={benchName} · 柱=各月收益率（仅已记录月份实色）</div>
       </div>
 
       <div className="inv-grid">
