@@ -58,7 +58,7 @@ export function Fire() {
       <div className="card" style={{ marginBottom: 14 }}>
         <h3>净资产增长曲线（月储蓄 {fmt(F.save)} · 年化 {F.rate}%）</h3>
         <LineChart
-          width={560} height={220}
+          width={1100} height={240}
           x0={0} x1={cap}
           yMin={0}
           yMax={Math.max(target, v) * 1.05}
