@@ -192,8 +192,8 @@ export function Settings() {
               <label className="fld">
                 <span>类型</span>
                 <select value={f.payType} onChange={(e) => setField('payType', e.target.value)}>
-                  <option value="current_month">当月发（本月15号发本月工资）</option>
-                  <option value="next_month">次月发（下月15号发本月工资）</option>
+                  <option value="current_month">当月发</option>
+                  <option value="next_month">次月发</option>
                 </select>
               </label>
               {field('日期', 'payDay', 'number')}
