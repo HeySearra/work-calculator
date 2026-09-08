@@ -84,4 +84,8 @@ export const api = {
     const r = await req(`/api/benchmarks/sync`)
     return r.json()
   },
+  async getPensionBases(): Promise<{ year: number; note: string; bases: Record<string, number> }> {
+    const r = await req(`/api/pension-bases`)
+    return r.json()
+  },
 }

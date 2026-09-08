@@ -32,7 +32,7 @@ export interface Pension {
   paidMonths: number  // 已缴月数（精确输入）
   minMonths: number   // 领退休金最低缴费月数
   personal: number    // 基本养老保险个人账户余额
-  wage: number        // 缴费工资（退休金估算参考，=省社平与本人指数化缴费工资的代理）
+  wage: number        // 养老金计发基数 / 省社平工资（基础养老金公式用，可自动同步或手动填）
   base: number        // 缴费基数（每月实际缴费按此计算）
   idx: number
   rate: number
@@ -41,6 +41,7 @@ export interface Pension {
   annCompRate: number // 年金单位缴费比例（%）
   annPersRate: number // 年金个人缴费比例（%）
   birthDate: string   // 出生日期（YYYY-MM-DD；空表示未设置，回退到按入职日期推算）
+  province: string    // 参保省份（用于自动获取养老金计发基数 / 省社平工资）
 }
 
 export interface Fire {
@@ -178,7 +179,7 @@ export const DEFAULT: AppState = {
     unpunchedMode: 'standard',
   },
   payday: { type: 'next_month', day: 15, rule: 'advance', amount: 13500 },
-  pension: { paid: 8.25, paidMonths: 99, minMonths: 180, personal: 51200, wage: 8321, base: 8321, idx: 1.0, rate: 4, age: 50, annBal: 0, annCompRate: 8, annPersRate: 4, birthDate: '' },
+  pension: { paid: 8.25, paidMonths: 99, minMonths: 180, personal: 51200, wage: 8321, base: 8321, idx: 1.0, rate: 4, age: 50, annBal: 0, annCompRate: 8, annPersRate: 4, birthDate: '', province: '' },
   fire: { target: 1000000, spend: 40000, save: 6000, rate: 5 },
   invest: {
     target: 6,

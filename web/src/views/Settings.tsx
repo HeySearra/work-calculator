@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useStore } from '../store'
 import { DEFAULT, mergeState, BENCH_PRESETS, type AppState } from '../model'
 import { fmt, appToday } from '../format'
@@ -18,7 +18,7 @@ function applyForm(d: AppState, f: Str) {
   py.type = (f.payType as 'current_month' | 'next_month'); py.day = num('payDay'); py.rule = (f.payRule as 'advance' | 'delay' | 'same'); py.amount = num('payAmt')
   pn.paidMonths = num('pnPaidMonths'); pn.minMonths = num('pnMinMonths'); pn.paid = pn.paidMonths / 12
   pn.personal = num('pnPers'); pn.wage = num('pnWage'); pn.base = num('pnBase'); pn.idx = num('pnIdx'); pn.rate = num('pnRate'); pn.age = num('pnAge'); pn.birthDate = f.pnBirth
-  pn.annBal = num('pnAnnBal'); pn.annCompRate = num('pnAnnComp'); pn.annPersRate = num('pnAnnPers')
+  pn.annBal = num('pnAnnBal'); pn.annCompRate = num('pnAnnComp'); pn.annPersRate = num('pnAnnPers'); pn.province = f.pnProvince
   fr.target = num('frTgt'); fr.spend = num('frSpend'); fr.save = num('frSave'); fr.rate = num('frRate')
   iv.target = num('ivTgt')
   iv.benchmark = f.ivBench
@@ -34,6 +34,10 @@ export function Settings() {
   const fileRef = useRef<HTMLInputElement>(null)
   const saveTimer = useRef<number | null>(null)
   const msgTimer = useRef<number | null>(null)
+  const [bases, setBases] = useState<Record<string, number>>({})
+  useEffect(() => {
+    api.getPensionBases().then((d) => setBases(d.bases)).catch(() => {})
+  }, [])
 
   const initForm = (): Str => {
     const p = S.profile, pn = S.pension, fr = S.fire, iv = S.invest, py = S.payday
@@ -46,6 +50,7 @@ export function Settings() {
       pnPaidMonths: String(pn.paidMonths), pnMinMonths: String(pn.minMonths),
       pnPers: String(pn.personal), pnWage: String(pn.wage), pnBase: String(pn.base),
       pnIdx: String(pn.idx), pnRate: String(pn.rate), pnAge: String(pn.age), pnBirth: pn.birthDate,
+      pnProvince: pn.province,
       pnAnnBal: String(pn.annBal), pnAnnComp: String(pn.annCompRate), pnAnnPers: String(pn.annPersRate),
       frTgt: String(fr.target), frSpend: String(fr.spend), frSave: String(fr.save), frRate: String(fr.rate),
       ivTgt: String(iv.target), ivBench: iv.benchmark, ivBase: String(iv.base),
@@ -140,6 +145,15 @@ export function Settings() {
     } catch {
       flash('获取节假日失败')
     }
+  }
+
+  async function syncBase() {
+    const prov = fRef.current.pnProvince
+    if (!prov) { flash('请先选择参保省份'); return }
+    const v = bases[prov]
+    if (!v) { flash(`${prov} 暂未内置，请手动填写`); return }
+    setField('pnWage', String(v))
+    flash(`已填入 ${prov} 计发基数 ${v}`)
   }
 
   function field(label: string, k: string, type = 'text', step?: string) {
@@ -264,10 +278,22 @@ export function Settings() {
             </div>
             <div className="fld-row">
               {field('出生日期', 'pnBirth', 'date')}
-              {field('缴费工资(估算参考)', 'pnWage', 'number')}
+              {field('养老金计发基数 / 省社平工资', 'pnWage', 'number')}
               {field('计发指数', 'pnIdx', 'number', '0.01')}
               {field('记账利率%', 'pnRate', 'number', '0.1')}
               {field('退休年龄', 'pnAge', 'number')}
+            </div>
+            <div className="fld-row" style={{ alignItems: 'flex-end' }}>
+              <label className="fld">
+                <span>参保省份</span>
+                <select value={f.pnProvince} onChange={(e) => setField('pnProvince', e.target.value)}>
+                  <option value="">— 手动填写 —</option>
+                  {Object.keys(bases).map((prov) => (
+                    <option key={prov} value={prov}>{prov}</option>
+                  ))}
+                </select>
+              </label>
+              <button className="btn ghost" onClick={syncBase} disabled={!f.pnProvince}>获取计发基数</button>
             </div>
             <div className="hint" style={{ margin: '8px 0 2px' }}>企业年金 / 职业年金（补充养老，单位与个人共同缴费）</div>
             <div className="fld-row">
