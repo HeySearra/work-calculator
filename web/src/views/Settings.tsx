@@ -186,9 +186,22 @@ export function Settings() {
           <div className="card">
             <h3>发薪日</h3>
             <div className="fld-row">
-              {field('类型', 'payType')}
+              <label className="fld">
+                <span>类型</span>
+                <select value={f.payType} onChange={(e) => setField('payType', e.target.value)}>
+                  <option value="current_month">当月发（本月15号发本月工资）</option>
+                  <option value="next_month">次月发（下月15号发本月工资）</option>
+                </select>
+              </label>
               {field('日期', 'payDay', 'number')}
-              {field('规则', 'payRule')}
+              <label className="fld">
+                <span>规则</span>
+                <select value={f.payRule} onChange={(e) => setField('payRule', e.target.value)}>
+                  <option value="same">周末不变（周六日按原日期发）</option>
+                  <option value="advance">提前发（遇周末提前到上一个工作日）</option>
+                  <option value="delay">延后发（遇周末顺延到下一个工作日）</option>
+                </select>
+              </label>
               {field('金额', 'payAmt', 'number')}
             </div>
           </div>
