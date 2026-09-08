@@ -28,8 +28,9 @@ export function Settings() {
       city: S.user.city,
       payType: py.type, payDay: String(py.day), payRule: py.rule, payAmt: String(py.amount),
       pnPaidMonths: String(pn.paidMonths), pnMinMonths: String(pn.minMonths),
-      pnPers: String(pn.personal), pnWage: String(pn.wage),
+      pnPers: String(pn.personal), pnWage: String(pn.wage), pnBase: String(pn.base),
       pnIdx: String(pn.idx), pnRate: String(pn.rate), pnAge: String(pn.age),
+      pnAnnBal: String(pn.annBal), pnAnnComp: String(pn.annCompRate), pnAnnPers: String(pn.annPersRate),
       frTgt: String(fr.target), frSpend: String(fr.spend), frSave: String(fr.save), frRate: String(fr.rate),
       ivTgt: String(iv.target), ivBench: iv.benchmark, ivBase: String(iv.base),
       holidays: holidaysToText(S.holidays),
@@ -49,7 +50,8 @@ export function Settings() {
       d.user.city = f.city
       py.type = (f.payType as 'current_month' | 'next_month'); py.day = num('payDay'); py.rule = (f.payRule as 'advance' | 'delay' | 'same'); py.amount = num('payAmt')
       pn.paidMonths = num('pnPaidMonths'); pn.minMonths = num('pnMinMonths'); pn.paid = pn.paidMonths / 12
-      pn.personal = num('pnPers'); pn.wage = num('pnWage'); pn.idx = num('pnIdx'); pn.rate = num('pnRate'); pn.age = num('pnAge')
+      pn.personal = num('pnPers'); pn.wage = num('pnWage'); pn.base = num('pnBase'); pn.idx = num('pnIdx'); pn.rate = num('pnRate'); pn.age = num('pnAge')
+      pn.annBal = num('pnAnnBal'); pn.annCompRate = num('pnAnnComp'); pn.annPersRate = num('pnAnnPers')
       fr.target = num('frTgt'); fr.spend = num('frSpend'); fr.save = num('frSave'); fr.rate = num('frRate')
       iv.target = num('ivTgt')
       iv.benchmark = f.ivBench
@@ -173,15 +175,22 @@ export function Settings() {
           <div className="card">
             <h3>养老账户</h3>
             <div className="fld-row">
+              {field('缴费基数', 'pnBase', 'number')}
+              {field('个人账户', 'pnPers', 'number')}
               {field('已缴费月数', 'pnPaidMonths', 'number')}
               {field('最低缴费月数', 'pnMinMonths', 'number')}
-              {field('个人账户', 'pnPers', 'number')}
-              {field('缴费工资', 'pnWage', 'number')}
             </div>
             <div className="fld-row">
+              {field('缴费工资(估算参考)', 'pnWage', 'number')}
               {field('计发指数', 'pnIdx', 'number', '0.01')}
               {field('记账利率%', 'pnRate', 'number', '0.1')}
               {field('退休年龄', 'pnAge', 'number')}
+            </div>
+            <div className="hint" style={{ margin: '8px 0 2px' }}>企业年金 / 职业年金（补充养老，单位与个人共同缴费）</div>
+            <div className="fld-row">
+              {field('年金账户余额', 'pnAnnBal', 'number')}
+              {field('单位缴费%', 'pnAnnComp', 'number', '0.1')}
+              {field('个人缴费%', 'pnAnnPers', 'number', '0.1')}
             </div>
           </div>
           <div className="card">
