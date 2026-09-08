@@ -22,13 +22,17 @@ export function Fire() {
   const annualSave = F.save * 12
   const saveRate = annualSave / (F.spend + annualSave)
 
-  // FireCurve：净资产增长
-  const cap = Math.min(months, 600)
+  // FireCurve：净资产增长（按年打点，避免太密）
+  const capMonths = Math.min(months, 600)
+  const capYears = Math.ceil(capMonths / 12)
   const pts: [number, number][] = []
   let v = net
-  for (let m = 0; m <= cap; m++) {
-    pts.push([m, v])
-    v = v * (1 + i) + F.save
+  for (let y = 0; y <= capYears; y++) {
+    pts.push([y, v])
+    // 每年末 = 前一年末复利 12 次 + 12 次月储蓄
+    for (let m = 0; m < 12; m++) {
+      v = v * (1 + i) + F.save
+    }
   }
 
   return (
@@ -59,12 +63,12 @@ export function Fire() {
         <h3>净资产增长曲线（月储蓄 {fmt(F.save)} · 年化 {F.rate}%）</h3>
         <LineChart
           width={1100} height={240}
-          x0={0} x1={cap}
+          x0={0} x1={capYears}
           yMin={0}
           yMax={Math.max(target, v) * 1.05}
           series={[{ points: pts, color: 'var(--brand-2)', fill: true }]}
           target={target}
-          xTicks={[0, Math.round(cap / 3), Math.round((2 * cap) / 3), cap].map((m) => ({ x: m, text: m + '月' }))}
+          xTicks={[0, Math.round(capYears / 3), Math.round((2 * capYears) / 3), capYears].map((y) => ({ x: y, text: y + '年' }))}
           yFormat={(n) => fmtN(n / 10000, 1) + 'w'}
         />
       </div>
