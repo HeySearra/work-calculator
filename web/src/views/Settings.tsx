@@ -270,10 +270,10 @@ export function Settings() {
             </div>
             <div className="fld-row">
               {field('出生日期', 'pnBirth', 'date')}
-              {field('养老金计发基数 / 省社平工资', 'pnWage', 'number')}
+              {field('退休年龄', 'pnAge', 'number')}
               {field('计发指数', 'pnIdx', 'number', '0.01')}
               {field('记账利率%', 'pnRate', 'number', '0.1')}
-              {field('退休年龄', 'pnAge', 'number')}
+              {field('养老金计发基数 / 省社平工资', 'pnWage', 'number')}
             </div>
             <div className="fld-row" style={{ alignItems: 'flex-end' }}>
               <label className="fld">
