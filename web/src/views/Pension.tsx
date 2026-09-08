@@ -174,12 +174,12 @@ export function Pension() {
       <div className="card full-col">
         <div className="card-title">
           <span className="ico">★</span>退休金预估
-          <span className="badge" style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4 }}>
+          <span className="badge" style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
             按
             <select
               value={pn.age}
               onChange={(e) => commit((d) => { d.pension.age = Number(e.target.value) })}
-              style={{ fontSize: 11, padding: '2px 4px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--surface)' }}
+              style={{ fontSize: 11, padding: '2px 4px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--surface)', width: 'auto' }}
             >
               {RETIRE_OPTIONS.map((a) => <option key={a} value={a}>{a}</option>)}
             </select>
