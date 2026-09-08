@@ -29,7 +29,9 @@ export function Pension() {
 
   const [target, setTarget] = useState(8000)
   const needBasic = Math.max(0, target - personalPension)
-  const needYears = (needBasic * 2) / (pn.wage * (1 + pn.idx))
+  // 基础养老金 = ((工资 + 指数化工资)/2) × 缴费年限 × 1%
+  // 反推缴费年限 = 需要的基础养老金 ÷ (((工资 + 指数化工资)/2) × 1%)
+  const needYears = Math.max(0, (needBasic * 2) / (pn.wage * (1 + pn.idx)) / 0.01)
   const needPers = Math.max(0, (target - basePension) * accountMonths)
   const remainMonths = Math.max(1, Math.round(yearsToRetire * 12))
   const needMonthly = Math.max(0, (needPers - pn.personal) / remainMonths)
