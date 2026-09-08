@@ -16,7 +16,9 @@ export function Pension() {
   const minYears = pn.minMonths / 12
   const remainMinYears = Math.max(0, (pn.minMonths - pn.paidMonths) / 12)
 
-  const age = (now.getTime() - new Date(p.hireDate).getTime()) / 365.25 / 86400000 + 22
+  const age = pn.curAge > 0
+    ? pn.curAge
+    : (now.getTime() - new Date(p.hireDate).getTime()) / 365.25 / 86400000 + 22
   const yearsToRetire = Math.max(0, pn.age - age)
 
   // 缴费构成（按缴费基数）
@@ -97,7 +99,7 @@ export function Pension() {
         <div className="progress" style={{ marginTop: 14 }}>
           <div className="fill" style={{ width: `${progress}%` }} />
         </div>
-        <p className="hint" style={{ marginTop: 6 }}>{pn.paidMonths} 个月 / 最低 {pn.minMonths} 个月</p>
+        <p className="hint" style={{ marginTop: 6 }}>{pn.paidMonths} 个月 / 最低 {pn.minMonths} 个月 · 当前 {age.toFixed(1)} 岁 · {pn.age} 岁退休</p>
       </div>
 
       {/* 每月缴费构成 */}
