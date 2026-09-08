@@ -2,7 +2,6 @@
 
 export interface User {
   name: string
-  city: string
 }
 
 export interface Profile {
@@ -163,7 +162,7 @@ export interface AppState {
 }
 
 export const DEFAULT: AppState = {
-  user: { name: 'OO', city: '成都' },
+  user: { name: 'OO' },
   profile: {
     workStart: '09:00',
     workEnd: '18:00',

@@ -14,7 +14,6 @@ function applyForm(d: AppState, f: Str) {
   p.workStart = f.workStart; p.workEnd = f.workEnd; p.lunchStart = f.lunchStart; p.lunchEnd = f.lunchEnd
   p.salary = num('salary'); p.otW = num('otW'); p.otWe = num('otWe'); p.hireDate = f.hireDate
   p.bonus = num('bonus'); p.bonusAmort = f.bonusAmort === '1'; p.unpunchedMode = (f.unpunchedMode as 'standard' | 'off')
-  d.user.city = f.city
   py.type = (f.payType as 'current_month' | 'next_month'); py.day = num('payDay'); py.rule = (f.payRule as 'advance' | 'delay' | 'same'); py.amount = num('payAmt')
   pn.paidMonths = num('pnPaidMonths'); pn.minMonths = num('pnMinMonths'); pn.paid = pn.paidMonths / 12
   pn.personal = num('pnPers'); pn.wage = num('pnWage'); pn.base = num('pnBase'); pn.idx = num('pnIdx'); pn.rate = num('pnRate'); pn.age = num('pnAge'); pn.birthDate = f.pnBirth
@@ -45,7 +44,6 @@ export function Settings() {
       workStart: p.workStart, workEnd: p.workEnd, lunchStart: p.lunchStart, lunchEnd: p.lunchEnd,
       salary: String(p.salary), otW: String(p.otW), otWe: String(p.otWe), hireDate: p.hireDate,
       bonus: String(p.bonus), bonusAmort: p.bonusAmort ? '1' : '0', unpunchedMode: p.unpunchedMode,
-      city: S.user.city,
       payType: py.type, payDay: String(py.day), payRule: py.rule, payAmt: String(py.amount),
       pnPaidMonths: String(pn.paidMonths), pnMinMonths: String(pn.minMonths),
       pnPers: String(pn.personal), pnWage: String(pn.wage), pnBase: String(pn.base),
@@ -193,9 +191,6 @@ export function Settings() {
                 <option value="0">不摊</option><option value="1">分摊</option>
               </select>
             </label>
-            <div className="fld-row">
-              {field('城市', 'city')}
-            </div>
             <label className="fld" style={{ marginBottom: 8 }}>
               <span>节假日（例 10-01* 表示补班，多个用英文逗号分隔）</span>
               <input value={f.holidays} onChange={(e) => setField('holidays', e.target.value)} placeholder="10-01,10-02,10-01*" />
