@@ -55,6 +55,8 @@ export interface Invest {
   benchmark: string          // 当前选中的基准指数 key
   bench: Record<string, number[]>  // 多个指数的月度收益率（%），每个长度 12
   base: number
+  profitMonthly: (number | null)[]  // 每月盈亏金额（元），用户手动填写；与净资产联动算收益率，长度 12
+  profitWeekly: (number | null)[]   // 每周盈亏金额（元），用户手动填写，长度 52
 }
 
 // 常用基准指数预设
@@ -175,6 +177,8 @@ export const DEFAULT: AppState = {
       bond: [0.5, 0.3, 0.6, 0.4, 0.5, 0.4, 0.6, 0.5, 0.4, 0.5, 0.4, 0.5],
     },
     base: 156000,
+    profitMonthly: [],
+    profitWeekly: [],
   },
   weekly: [],
   monthly: [
@@ -250,6 +254,15 @@ export function mergeState(v: Partial<AppState> | null | undefined): AppState {
       if (!merged.bench[merged.benchmark]) {
         merged.benchmark = 'csi300'
       }
+      // 盈亏金额：缺位补 0（用 null 表示「未填」，便于区分 0 利润和未填）
+      merged.profitMonthly = Array.from({ length: 12 }, (_, i) => {
+        const v = vInv.profitMonthly?.[i]
+        return v == null || v === '' || isNaN(Number(v)) ? null : Number(v)
+      })
+      merged.profitWeekly = Array.from({ length: 52 }, (_, i) => {
+        const v = vInv.profitWeekly?.[i]
+        return v == null || v === '' || isNaN(Number(v)) ? null : Number(v)
+      })
       return merged
     })(),
     accounts: { ...DEFAULT.accounts, ...(v.accounts || {}) },

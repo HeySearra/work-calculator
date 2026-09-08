@@ -1,5 +1,5 @@
 // 计算逻辑层 —— 从原始 vanilla app.js 忠实移植，全部改为纯函数（接收 state/参数）
-import type { AppState, Punch, Profile, Payday } from './model'
+import type { AppState, Punch, Profile, Payday, TrendPoint } from './model'
 import { appToday } from './format'
 
 export function parseHM(s: string): number {
@@ -141,11 +141,64 @@ export function computeRating(my: number, bench: number): Rating {
   return { name: '稳定超额', desc: `跑赢基准 ${diff.toFixed(1)}% · 能力初步成型` }
 }
 
+// 从趋势数据获取某月的「期初 / 期末净资产」
+// start = 上一个趋势点的净资产（即本月初），end = 当月趋势点的净资产（月末）
+export function getNetAssetRange(trend: TrendPoint[], ym: string): { start: number | null; end: number | null } {
+  const sorted = trend.slice().sort((a, b) => a.ym.localeCompare(b.ym))
+  const endIdx = sorted.findIndex((t) => t.ym === ym)
+  if (endIdx < 0) return { start: null, end: null }
+  const end = sorted[endIdx].v
+  const start = endIdx > 0 ? sorted[endIdx - 1].v : null
+  return { start, end }
+}
+
+// 根据「盈亏金额 + 期初净资产」换算月收益率
+// profitMonthly 元素为 null 表示未填，回退到手动录入的 S.monthly[i].r
+// 周度模式下用 profitWeekly → 周收益率 → 复合为月收益率
+export interface NetForMonth { ym: string; start: number | null; end: number | null }
+
+// 月度收益率计算：优先用 profitMonthly / start；否则用 S.monthly[i].r
+function monthlyRatesFromProfit(S: AppState, year: number): number[] {
+  const profits = S.invest.profitMonthly || []
+  return Array.from({ length: 12 }, (_, i) => {
+    const d = S.monthly[i]
+    const ym = d?.y || `${year}-${String(i + 1).padStart(2, '0')}`
+    const profit = profits[i]
+    if (profit != null && profit !== 0) {
+      const { start } = getNetAssetRange(S.trend, ym)
+      if (start != null && start > 0) return (profit / start) * 100
+    }
+    return d ? d.r : 0
+  })
+}
+
+// 周度聚合：把 profitWeekly 按月分桶，复合为月收益率
+// 每周归属的月由 monthBuckets 决定；每周的分母 = 该月期初净资产 / 该月总周数
+function monthlyRatesFromWeeklyProfit(S: AppState, year: number): number[] {
+  const profits = (S.invest.profitWeekly || []).slice(0, 52)
+  while (profits.length < 52) profits.push(null)
+  const monthBuckets: [number, number][] = [[0, 4], [4, 8], [8, 13], [13, 17], [17, 22], [22, 26], [26, 30], [30, 35], [35, 39], [39, 43], [43, 47], [47, 52]]
+  return monthBuckets.map(([s, e], m) => {
+    const ym = `${year}-${String(m + 1).padStart(2, '0')}`
+    const { start } = getNetAssetRange(S.trend, ym)
+    if (start == null || start <= 0) return 0
+    const ws = profits.slice(s, e)
+    const weekCount = ws.length
+    const weeklyBase = start / weekCount
+    let c = 1
+    ws.forEach((p) => {
+      if (p != null && p !== 0 && weeklyBase > 0) c *= 1 + p / weeklyBase
+    })
+    return (c - 1) * 100
+  })
+}
+
 // 月度 / 周度累计收益率计算
 export interface InvestCalc {
   cum: (number | null)[]
   bc: (number | null)[]
   monthly: number[] // 周度模式下按月聚合
+  weekly: number[]  // 月度模式时为空；周度模式下为各周收益率
   n: number          // 截至当前已过去的月份数（保证 0 月份也进图）
   last: number
   bl: number
@@ -159,27 +212,35 @@ export interface InvestCalc {
   maxDD: number        // 最大回撤 %
   streak: number       // 连续正超额（从末尾往回数）
   excess: number[]     // 每月超额 = monthly - bench
+  netByMonth: { ym: string; start: number | null; end: number | null }[]  // 各月期初/期末净资产
 }
 export function computeInvest(S: AppState, freq: 'monthly' | 'weekly'): InvestCalc {
   // 当前选中的基准指数（多指数支持），缺位补 0
   const benchSource = S.invest.bench?.[S.invest.benchmark] || S.invest.bench?.csi300 || []
   const bench = Array.from({ length: 12 }, (_, i) => Number(benchSource[i] ?? 0) || 0)
+  const year = appToday().getFullYear()
   let monthly: number[]
+  let weekly: number[] = []
   if (freq === 'weekly') {
-    const arr = S.weekly.length === 52 ? S.weekly : new Array(52).fill(0)
-    const monthBuckets = [[0, 4], [4, 8], [8, 13], [13, 17], [17, 22], [22, 26], [26, 30], [30, 35], [35, 39], [39, 43], [43, 47], [47, 52]]
-    monthly = monthBuckets.map(([s, e]) => {
-      const ws = arr.slice(s, e)
-      let c = 1
-      ws.forEach((r) => (c *= 1 + r / 100))
-      return (c - 1) * 100
+    monthly = monthlyRatesFromWeeklyProfit(S, year)
+    // 周度模式下同步算各周收益率（用于表格回显）
+    const profits = (S.invest.profitWeekly || []).slice(0, 52)
+    while (profits.length < 52) profits.push(null)
+    weekly = profits.map((p, i) => {
+      if (p == null || p === 0) return 0
+      // 找该周所属的月期初净资产
+      const monthBuckets: [number, number][] = [[0, 4], [4, 8], [8, 13], [13, 17], [17, 22], [22, 26], [26, 30], [30, 35], [35, 39], [39, 43], [43, 47], [47, 52]]
+      const mIdx = monthBuckets.findIndex(([s, e]) => i >= s && i < e)
+      if (mIdx < 0) return 0
+      const ym = `${year}-${String(mIdx + 1).padStart(2, '0')}`
+      const { start } = getNetAssetRange(S.trend, ym)
+      if (start == null || start <= 0) return 0
+      const weekCount = monthBuckets[mIdx][1] - monthBuckets[mIdx][0]
+      const weeklyBase = start / weekCount
+      return weeklyBase > 0 ? (p / weeklyBase) * 100 : 0
     })
   } else {
-    // 月度：补齐 12 项，缺失月份按 0 计；避免 n 算法把 undefined 当非零导致 cum 变 NaN
-    monthly = Array.from({ length: 12 }, (_, i) => {
-      const d = S.monthly[i]
-      return d ? d.r : 0
-    })
+    monthly = monthlyRatesFromProfit(S, year)
   }
   // 截至当前已过去的月份数：保证 0 月份也进图（不剔除）
   const today = appToday()
@@ -231,7 +292,13 @@ export function computeInvest(S: AppState, freq: 'monthly' | 'weekly'): InvestCa
     else break
   }
 
-  return { cum, bc, monthly, n, last, bl, ann, exc, amt, bestMonth, worstMonth, winRate, maxDD, streak, excess }
+  // 各月期初/期末净资产（供表格回显）
+  const netByMonth: { ym: string; start: number | null; end: number | null }[] = Array.from({ length: 12 }, (_, i) => {
+    const ym = S.monthly[i]?.y || `${year}-${String(i + 1).padStart(2, '0')}`
+    return { ym, ...getNetAssetRange(S.trend, ym) }
+  })
+
+  return { cum, bc, monthly, weekly, n, last, bl, ann, exc, amt, bestMonth, worstMonth, winRate, maxDD, streak, excess, netByMonth }
 }
 
 // ---------- 发工资周期进度（pay.last → pay.next） ----------

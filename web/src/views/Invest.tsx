@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useStore } from '../store'
 import { fmt } from '../format'
-import { computeInvest, computeRating } from '../calc'
+import { computeInvest, computeRating, getNetAssetRange } from '../calc'
 import { LineChart } from '../components/Charts'
 import { BENCH_PRESETS } from '../model'
 
@@ -36,6 +36,22 @@ export function Invest() {
       const w = Array.from({ length: 52 }, (_, k) => d.weekly[k] ?? 0)
       w[i] = r
       d.weekly = w
+    })
+  }
+  function setProfitMonthly(i: number, v: number | null) {
+    commit((d) => {
+      if (!Array.isArray(d.invest.profitMonthly) || d.invest.profitMonthly.length !== 12) {
+        d.invest.profitMonthly = new Array(12).fill(null)
+      }
+      d.invest.profitMonthly[i] = v
+    })
+  }
+  function setProfitWeekly(i: number, v: number | null) {
+    commit((d) => {
+      if (!Array.isArray(d.invest.profitWeekly) || d.invest.profitWeekly.length !== 52) {
+        d.invest.profitWeekly = new Array(52).fill(null)
+      }
+      d.invest.profitWeekly[i] = v
     })
   }
   function setBenchIndex(key: string) {
@@ -125,7 +141,10 @@ export function Invest() {
               <thead>
                 <tr>
                   <th>月份</th>
-                  <th>点数%</th>
+                  <th>期初净资产</th>
+                  <th>期末净资产</th>
+                  <th>盈亏金额</th>
+                  <th>收益率%</th>
                   <th>{benchName}%</th>
                   <th>超额%</th>
                   <th>累计%</th>
@@ -133,21 +152,35 @@ export function Invest() {
               </thead>
               <tbody>
                 {Array.from({ length: 12 }).map((_, i) => {
-                  const r = S.monthly[i]?.r ?? 0
+                  const ym = S.monthly[i]?.y || `${new Date().getFullYear()}-${String(i + 1).padStart(2, '0')}`
+                  const net = calc.netByMonth[i]
+                  const profit = S.invest.profitMonthly?.[i] ?? null
+                  const r = calc.monthly[i]
                   const b = benchArr[i] ?? 0
                   const past = i < calc.n
                   const exc = past ? calc.excess[i] : null
                   const c = past ? calc.cum[i] : null
+                  const hasNet = net.start != null && net.start > 0
+                  const manualR = S.monthly[i]?.r
                   return (
                     <tr key={i}>
-                      <td className="muted">{S.monthly[i]?.y || `${new Date().getFullYear()}-${String(i + 1).padStart(2, '0')}`}</td>
+                      <td className="muted">{ym}</td>
+                      <td className="muted tnum">{net.start != null ? fmt(net.start) : '—'}</td>
+                      <td className="muted tnum">{net.end != null ? fmt(net.end) : '—'}</td>
                       <td>
                         <input
-                          type="number" step="0.1"
-                          value={r}
-                          onChange={(e) => setMonthly(i, Number(e.target.value))}
-                          className={r > 0 ? 'num up' : r < 0 ? 'num down' : ''}
+                          type="number" step="0.01"
+                          value={profit == null ? '' : profit}
+                          onChange={(e) => setProfitMonthly(i, e.target.value === '' ? null : Number(e.target.value))}
+                          className={profit != null && profit > 0 ? 'num up' : profit != null && profit < 0 ? 'num down' : ''}
+                          placeholder={hasNet ? '填金额' : '需净资产'}
                         />
+                      </td>
+                      <td className={`tnum ${!past ? 'muted' : r > 0 ? 'num up' : r < 0 ? 'num down' : ''}`}>
+                        {past ? `${r >= 0 ? '+' : ''}${r.toFixed(2)}` : '—'}
+                        {past && profit != null && hasNet && manualR != null && Math.abs(profit / net.start! * 100 - manualR) > 0.05 && (
+                          <div className="hint" style={{ fontSize: 10, marginTop: 1 }}>手动 {manualR >= 0 ? '+' : ''}{manualR.toFixed(2)}</div>
+                        )}
                       </td>
                       <td className={!past ? 'muted' : b > 0 ? 'num up' : b < 0 ? 'num down' : ''}>
                         {past ? `${b >= 0 ? '+' : ''}${b.toFixed(2)}` : '—'}
@@ -164,11 +197,79 @@ export function Invest() {
               </tbody>
             </table>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(13, minmax(0, 1fr))', gap: 4 }}>
-              {Array.from({ length: 52 }).map((_, i) => (
-                <input key={i} type="number" step="0.1" value={S.weekly[i] ?? 0} onChange={(e) => setWeekly(i, Number(e.target.value))}
-                  style={{ width: '100%', padding: '4px 2px', textAlign: 'center', fontSize: 11 }} title={`第 ${i + 1} 周`} />
-              ))}
+            <div>
+              <div className="hint" style={{ marginBottom: 8 }}>填写每周盈亏金额（元），收益率 = 周盈亏 ÷（当月期初净资产 ÷ 当月周数）。下方为各月净资产参考。</div>
+              <table className="inv-table inv-table-wide" style={{ marginBottom: 10 }}>
+                <thead>
+                  <tr>
+                    <th>月</th>
+                    <th>期初净资产</th>
+                    <th>期末净资产</th>
+                    <th>月收益率%</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Array.from({ length: 12 }).map((_, i) => {
+                    const ym = S.monthly[i]?.y || `${new Date().getFullYear()}-${String(i + 1).padStart(2, '0')}`
+                    const net = calc.netByMonth[i]
+                    const r = calc.monthly[i]
+                    const past = i < calc.n
+                    return (
+                      <tr key={i}>
+                        <td className="muted">{ym}</td>
+                        <td className="muted tnum">{net.start != null ? fmt(net.start) : '—'}</td>
+                        <td className="muted tnum">{net.end != null ? fmt(net.end) : '—'}</td>
+                        <td className={`tnum ${!past ? 'muted' : r > 0 ? 'num up' : r < 0 ? 'num down' : ''}`}>
+                          {past ? `${r >= 0 ? '+' : ''}${r.toFixed(2)}` : '—'}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(13, minmax(0, 1fr))', gap: 4 }}>
+                {(() => {
+                  const monthBuckets: [number, number][] = [[0, 4], [4, 8], [8, 13], [13, 17], [17, 22], [22, 26], [26, 30], [30, 35], [35, 39], [39, 43], [43, 47], [47, 52]]
+                  const monthLabels = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
+                  return Array.from({ length: 12 }).map((_, m) => {
+                    const [s, e] = monthBuckets[m]
+                    const profitSum: number = (S.invest.profitWeekly || []).slice(s, e).reduce((a: number, b) => a + (b || 0), 0)
+                    const ym = S.monthly[m]?.y || `${new Date().getFullYear()}-${String(m + 1).padStart(2, '0')}`
+                    const start = getNetAssetRange(S.trend, ym).start
+                    return (
+                      <div key={m} className="muted" style={{ fontSize: 10, textAlign: 'center', padding: '4px 2px', borderRadius: 4, background: 'var(--surface-2)' }}>
+                        <div style={{ fontWeight: 600 }}>{monthLabels[m]}</div>
+                        <div style={{ fontSize: 9 }}>{start != null ? `期初${(start / 10000).toFixed(1)}w` : '—'}</div>
+                        <div className={profitSum > 0 ? 'num up' : profitSum < 0 ? 'num down' : ''}>{profitSum > 0 ? '+' : ''}{profitSum.toFixed(0)}</div>
+                      </div>
+                    )
+                  })
+                })()}
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(13, minmax(0, 1fr))', gap: 4, marginTop: 4 }}>
+                {Array.from({ length: 13 }).map((_, c) => (
+                  <div key={'hdr' + c} className="muted" style={{ fontSize: 9, textAlign: 'center', fontWeight: 600 }}>
+                    {c === 0 ? '' : `W${c}`}
+                  </div>
+                ))}
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(13, minmax(0, 1fr))', gap: 4, marginTop: 2 }}>
+                {Array.from({ length: 52 }).map((_, i) => {
+                  const profit = S.invest.profitWeekly?.[i] ?? null
+                  return (
+                    <input
+                      key={i}
+                      type="number" step="0.01"
+                      value={profit == null ? '' : profit}
+                      onChange={(e) => setProfitWeekly(i, e.target.value === '' ? null : Number(e.target.value))}
+                      className={profit != null && profit > 0 ? 'num up' : profit != null && profit < 0 ? 'num down' : ''}
+                      style={{ width: '100%', padding: '4px 2px', textAlign: 'center', fontSize: 11 }}
+                      title={`第 ${i + 1} 周`}
+                      placeholder="0"
+                    />
+                  )
+                })}
+              </div>
             </div>
           )}
         </div>
