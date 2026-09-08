@@ -94,6 +94,8 @@ export interface Punch {
 export interface TrendPoint {
   ym: string
   v: number
+  a?: number  // 当月总资产（可选，旧数据可能没有）
+  d?: number  // 当月总负债（可选，旧数据可能没有）
 }
 
 // 净资产分组（资产为正、负债为负），用于计算总净资产
@@ -114,6 +116,18 @@ export function computeNet(accounts: Accounts): number {
   return net
 }
 
+// 当前总资产（存款+投资+公积金+养老账户）
+export function computeAssets(accounts: Accounts): number {
+  return ASSET_GROUPS.filter((g) => g.sign > 0).reduce((sum, g) => {
+    return sum + (accounts[g.key] || []).reduce((a, b) => a + (b.b || 0), 0)
+  }, 0)
+}
+
+// 当前总负债（取正值）
+export function computeDebts(accounts: Accounts): number {
+  return (accounts.debts || []).reduce((a, b) => a + (b.b || 0), 0)
+}
+
 // 当前年月（YYYY-MM）
 export function ymNow(): string {
   const d = new Date()
@@ -121,11 +135,11 @@ export function ymNow(): string {
 }
 
 // 把当前月真实净资产 upsert 进趋势数组（同月覆盖，保留历史真实月份）
-export function upsertTrend(trend: TrendPoint[], v: number): TrendPoint[] {
+export function upsertTrend(trend: TrendPoint[], v: number, a: number, d: number): TrendPoint[] {
   const ym = ymNow()
   const next = trend.slice()
   const idx = next.findIndex((t) => t.ym === ym)
-  const point = { ym, v: Math.round(v) }
+  const point: TrendPoint = { ym, v: Math.round(v), a: Math.round(a), d: Math.round(d) }
   if (idx >= 0) next[idx] = point
   else next.push(point)
   return next

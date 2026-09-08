@@ -54,30 +54,42 @@ export function Assets() {
     })
   }
 
-  // 较上月变化：当前净资产 - 最近一个月趋势值
-  const lastTrend = S.trend.length > 0 ? S.trend[S.trend.length - 1].v : 0
-  const netChange = net - lastTrend
+  // 较上月变化：当前值 - 上月趋势值（趋势最后一条为当前月）
+  const prev = S.trend.length >= 2 ? S.trend[S.trend.length - 2] : null
   const debtTotal = Math.abs(sums.debts)
+  const changeOf = (cur: number, key: 'v' | 'a' | 'd'): number | null => {
+    if (!prev) return null
+    const val = prev[key]
+    if (val == null) return null
+    return cur - val
+  }
+  const netChange = changeOf(net, 'v')
+  const assetChange = changeOf(posTotal, 'a')
+  const debtChange = changeOf(debtTotal, 'd')
+  const fmtChange = (change: number | null) => {
+    if (change === null) return '暂无历史对比'
+    const arrow = change >= 0 ? '↑' : '↓'
+    const sign = change >= 0 ? '+' : ''
+    return `${arrow} 较上月 ${sign}${fmt(change)}`
+  }
 
   return (
     <div>
       <div className="asset-summary">
-        <div className="asset-card net">
+        <div className="asset-card">
           <div className="asset-lbl">净资产</div>
           <div className="asset-big tnum">{fmt(net)}</div>
-          <div className="asset-change">
-            {S.trend.length > 1
-              ? `${netChange >= 0 ? '↑' : '↓'} 较上月 ${netChange >= 0 ? '+' : ''}${fmt(netChange)}`
-              : '暂无历史对比'}
-          </div>
+          <div className="asset-change">{fmtChange(netChange)}</div>
         </div>
         <div className="asset-card">
           <div className="asset-lbl">总资产</div>
           <div className="asset-big tnum up">{fmt(posTotal)}</div>
+          <div className="asset-change">{fmtChange(assetChange)}</div>
         </div>
         <div className="asset-card">
           <div className="asset-lbl">总负债</div>
           <div className="asset-big tnum down">{fmt(debtTotal)}</div>
+          <div className="asset-change">{fmtChange(debtChange)}</div>
         </div>
       </div>
 
