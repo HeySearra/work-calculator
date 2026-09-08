@@ -70,10 +70,15 @@ export function Pension() {
   const needPers = Math.max(0, target > est
     ? pn.personal + personalMonthly * 12 * (r <= 0 ? needYears : (Math.pow(1 + r, needYears) - 1) / r)
     : 0)
-  // 若想在退休年龄前刚好达成目标，平均每月需缴存多少（线性口径，不含复利）
-  const remainMonths = Math.max(1, Math.round(yearsToRetire * 12))
-  const targetPersonalAtRetire = Math.max(0, (target - basePensionPerYear * (paidYears + yearsToRetire)) * accountMonths)
-  const needMonthly = Math.max(0, (targetPersonalAtRetire - pn.personal) / remainMonths)
+  // 退休时基础养老金（按现有缴费年限 + 距退休剩余年限累积）
+  const baseAtRetire = basePensionPerYear * (paidYears + yearsToRetire)
+  // 退休时个人账户需达到的余额，让「基础 + 个人」刚好等于目标
+  const targetPersonalAtRetire = Math.max(0, (target - baseAtRetire) * accountMonths)
+  // 在维持当前月缴存 personalMonthly 的基础上，每月还需额外多缴多少，
+  // 才能在退休时刚好达标（与「需缴费至」同一套记账利率复利口径）
+  const annFactor = r > 0 ? 12 * (Math.pow(1 + r, yearsToRetire) - 1) / r : 12 * yearsToRetire
+  const totalMonthlyNeeded = Math.max(0, (targetPersonalAtRetire - pn.personal) / Math.max(1, annFactor))
+  const extraMonthly = Math.max(0, totalMonthlyNeeded - personalMonthly)
 
   const progress = Math.min(100, (pn.paidMonths / pn.minMonths) * 100)
 
@@ -211,10 +216,15 @@ export function Pension() {
             <h3 className="tnum">{fmt(needPers)}</h3>
           </div>
           <div className="kv-cell">
-            <p>养老个人账户月缴存需达到</p>
-            <h3 className="tnum">{fmt(needMonthly)}</h3>
+            <p>还需每月多缴</p>
+            <h3 className="tnum">{fmt(extraMonthly)}</h3>
           </div>
         </div>
+        <p className="hint" style={{ marginTop: 8, lineHeight: 1.6 }}>
+          {extraMonthly <= 0
+            ? `当前个人账户月缴存 ${fmt(personalMonthly)} 已足够，按现有缴存退休前即可达标（约需 ${needYears.toFixed(1)} 年）`
+            : `在现有 ${fmt(personalMonthly)}/月基础上，每月再多缴 ${fmt(extraMonthly)}，才能在退休时刚好达标`}
+        </p>
       </div>
     </div>
   )
