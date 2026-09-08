@@ -70,7 +70,17 @@ export function Fire() {
           target={target}
           xTicks={[0, Math.round(capYears / 3), Math.round((2 * capYears) / 3), capYears].map((y) => ({ x: y, text: y + '年' }))}
           yFormat={(n) => fmtN(n / 10000, 1) + 'w'}
-          tooltip={(x, y) => `${x}年后\n净资产 ${fmt(y)}`}
+          tooltip={(x, y) => {
+            const prev = x > 0 ? pts[x - 1][1] : null
+            const lines = [`${x}年后`, `净资产 ${fmt(y)}`]
+            if (prev != null) {
+              const d = y - prev
+              lines.push(`较上年 ${d >= 0 ? '+' : '−'}${fmt(Math.abs(d))}`)
+            } else {
+              lines.push('起点')
+            }
+            return lines.join('\n')
+          }}
         />
       </div>
 
