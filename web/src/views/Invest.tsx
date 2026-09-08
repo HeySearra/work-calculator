@@ -110,34 +110,34 @@ export function Invest() {
 
       <div className="grid" style={{ marginBottom: 14 }}>
         <div className="card">
-          <div className="lbl" style={{ color: 'var(--text-2)', fontSize: 13, marginBottom: 8 }}>年化（按已过去 {calc.n} 个月）</div>
-          <div className="big tnum" style={{ fontSize: 22, color: calc.ann >= 0 ? 'var(--up)' : 'var(--down)' }}>{calc.ann >= 0 ? '+' : ''}{calc.ann.toFixed(2)}%</div>
-          <div className="hint">截至当月的累计年化</div>
+          <div className="lbl">年化（按已过去 {calc.n} 个月）</div>
+          <div className="big tnum" style={{ color: calc.ann >= 0 ? 'var(--up)' : 'var(--down)' }}>{calc.ann >= 0 ? '+' : ''}{calc.ann.toFixed(2)}%</div>
+          <div className="sub">截至当月的累计年化</div>
         </div>
         <div className="card">
-          <div className="lbl" style={{ color: 'var(--text-2)', fontSize: 13, marginBottom: 8 }}>胜率</div>
-          <div className="big tnum" style={{ fontSize: 22 }}>{(calc.winRate * 100).toFixed(0)}%</div>
-          <div className="hint">正收益月份占比</div>
+          <div className="lbl">胜率</div>
+          <div className="big tnum">{(calc.winRate * 100).toFixed(0)}%</div>
+          <div className="sub">正收益月份占比</div>
         </div>
         <div className="card">
-          <div className="lbl" style={{ color: 'var(--text-2)', fontSize: 13, marginBottom: 8 }}>最大回撤</div>
-          <div className="big tnum" style={{ fontSize: 22, color: calc.maxDD > 0.5 ? 'var(--up)' : 'var(--text)' }}>{calc.maxDD.toFixed(2)}%</div>
-          <div className="hint">累计收益最大回撤幅度</div>
+          <div className="lbl">最大回撤</div>
+          <div className="big tnum" style={{ color: calc.maxDD > 0.5 ? 'var(--up)' : 'var(--text)' }}>{calc.maxDD.toFixed(2)}%</div>
+          <div className="sub">累计收益最大回撤幅度</div>
         </div>
         <div className="card">
-          <div className="lbl" style={{ color: 'var(--text-2)', fontSize: 13, marginBottom: 8 }}>最大单月</div>
-          <div className="big tnum" style={{ fontSize: 22, color: calc.bestMonth >= 0 ? 'var(--up)' : 'var(--down)' }}>{calc.bestMonth >= 0 ? '+' : ''}{calc.bestMonth.toFixed(2)}%</div>
-          <div className="hint">最差 {calc.worstMonth >= 0 ? '+' : ''}{calc.worstMonth.toFixed(2)}%</div>
+          <div className="lbl">最大单月</div>
+          <div className="big tnum" style={{ color: calc.bestMonth >= 0 ? 'var(--up)' : 'var(--down)' }}>{calc.bestMonth >= 0 ? '+' : ''}{calc.bestMonth.toFixed(2)}%</div>
+          <div className="sub">最差 {calc.worstMonth >= 0 ? '+' : ''}{calc.worstMonth.toFixed(2)}%</div>
         </div>
         <div className="card">
-          <div className="lbl" style={{ color: 'var(--text-2)', fontSize: 13, marginBottom: 8 }}>连续正超额</div>
-          <div className="big tnum" style={{ fontSize: 22, color: calc.streak > 0 ? 'var(--brand-2)' : 'var(--text)' }}>{calc.streak} 个月</div>
-          <div className="hint">从最近往回数连续跑赢基准</div>
+          <div className="lbl">连续正超额</div>
+          <div className="big tnum" style={{ color: calc.streak > 0 ? 'var(--brand-2)' : 'var(--text)' }}>{calc.streak} 个月</div>
+          <div className="sub">从最近往回数连续跑赢基准</div>
         </div>
         <div className="card">
-          <div className="lbl" style={{ color: 'var(--text-2)', fontSize: 13, marginBottom: 6 }}>理财能力</div>
-          <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--brand-2)' }}>{rating.name}</div>
-          <div className="hint">{rating.desc}</div>
+          <div className="lbl">理财能力</div>
+          <div className="big tnum" style={{ color: 'var(--brand-2)' }}>{rating.name}</div>
+          <div className="sub">{rating.desc}</div>
         </div>
       </div>
 
