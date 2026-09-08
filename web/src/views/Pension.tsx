@@ -70,15 +70,22 @@ export function Pension() {
   const needPers = Math.max(0, target > est
     ? pn.personal + personalMonthly * 12 * (r <= 0 ? needYears : (Math.pow(1 + r, needYears) - 1) / r)
     : 0)
-  // 退休时基础养老金（按现有缴费年限 + 距退休剩余年限累积）
-  const baseAtRetire = basePensionPerYear * (paidYears + yearsToRetire)
-  // 退休时个人账户需达到的余额，让「基础 + 个人」刚好等于目标
-  const targetPersonalAtRetire = Math.max(0, (target - baseAtRetire) * accountMonths)
-  // 在维持当前月缴存 personalMonthly 的基础上，每月还需额外多缴多少，
-  // 才能在退休时刚好达标（与「需缴费至」同一套记账利率复利口径）
-  const annFactor = r > 0 ? 12 * (Math.pow(1 + r, yearsToRetire) - 1) / r : 12 * yearsToRetire
-  const totalMonthlyNeeded = Math.max(0, (targetPersonalAtRetire - pn.personal) / Math.max(1, annFactor))
-  const extraMonthly = Math.max(0, totalMonthlyNeeded - personalMonthly)
+  // 多缴 = 提高缴费基数。提高基数会三处联动：
+  //  1) 个人账户 8% 增加 → 个人账户养老金↑
+  //  2) 统筹 16% 同步增加（成本，但基础养老金不按统筹存入额计发）
+  //  3) 缴费指数 = 基数/社平 上升 → 基础养老金↑（只影响未来年限，历史指数已固定）
+  // 设 k = 新基数/当前基数，退休时月养老金 = 基础(k) + 个人账户(k)，两者均随 k 线性增长，反解 k。
+  const totalYears = paidYears + yearsToRetire
+  const annF = r > 0 ? (Math.pow(1 + r, yearsToRetire) - 1) / r : yearsToRetire // 年复利因子（与「需缴费至」一致）
+  const baseConst = (pn.wage / 2) * 0.01 * totalYears                // 基础养老金中「社平一半」的固定项
+  const baseCoef = (pn.wage * pn.idx / 2) * 0.01 * yearsToRetire     // 基础养老金随基数（指数）增长的系数
+  const persConst = pn.personal / accountMonths                       // 当前个人账户余额对应养老金
+  const persCoef = (personalMonthly * 12 * annF) / accountMonths      // 个人账户随基数增长的系数
+  const k = (target - baseConst - persConst) / Math.max(1e-9, baseCoef + persCoef)
+  const needBase = Math.max(0, base * k)          // 需达到的缴费基数
+  const extraBase = Math.max(0, base * (k - 1))   // 需提高的缴费基数金额
+  const extraPers = extraBase * 0.08              // 其中个人账户每月多缴
+  const extraPool = extraBase * 0.16              // 其中统筹账户每月同步多缴
 
   const progress = Math.min(100, (pn.paidMonths / pn.minMonths) * 100)
 
@@ -216,14 +223,14 @@ export function Pension() {
             <h3 className="tnum">{fmt(needPers)}</h3>
           </div>
           <div className="kv-cell">
-            <p>还需每月多缴</p>
-            <h3 className="tnum">{fmt(extraMonthly)}</h3>
+            <p>缴费基数需提高</p>
+            <h3 className="tnum">{fmt(extraBase)}</h3>
           </div>
         </div>
         <p className="hint" style={{ marginTop: 8, lineHeight: 1.6 }}>
-          {extraMonthly <= 0
-            ? `当前个人账户月缴存 ${fmt(personalMonthly)} 已足够，按现有缴存退休前即可达标（约需 ${needYears.toFixed(1)} 年）`
-            : `在现有 ${fmt(personalMonthly)}/月基础上，每月再多缴 ${fmt(extraMonthly)}，才能在退休时刚好达标`}
+          {extraBase <= 0
+            ? `当前缴费基数 ${fmt(base)} 已足够，按现有缴存退休前即可达标（约需 ${needYears.toFixed(1)} 年）`
+            : `在现有基数 ${fmt(base)} 上每月多缴 ${fmt(extraBase)}（提高到 ${fmt(needBase)}）：个人账户 +${fmt(extraPers)}、统筹 +${fmt(extraPool)}，缴费指数同步上升、基础养老金也随之增加`}
         </p>
       </div>
     </div>
