@@ -70,6 +70,7 @@ export function Fire() {
           target={target}
           xTicks={[0, Math.round(capYears / 3), Math.round((2 * capYears) / 3), capYears].map((y) => ({ x: y, text: y + '年' }))}
           yFormat={(n) => fmtN(n / 10000, 1) + 'w'}
+          tooltip={(x, y) => `${x}年后\n净资产 ${fmt(y)}`}
         />
       </div>
 

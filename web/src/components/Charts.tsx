@@ -1,4 +1,6 @@
 // 轻量 SVG 图表组件（无第三方依赖）：折线/面积图 + 进度环
+import { useState } from 'react'
+
 export interface Series {
   points: [number, number][]
   color: string
@@ -19,6 +21,7 @@ export function LineChart({
   xTicks = [],
   yTicks = [],
   yFormat = (n) => String(Math.round(n)),
+  tooltip,
   showMarkers = true,
   padL = 46,
   padR = 14,
@@ -36,6 +39,7 @@ export function LineChart({
   xTicks?: { x: number; text: string }[]
   yTicks?: { y: number; text: string }[]
   yFormat?: (n: number) => string
+  tooltip?: (x: number, y: number) => string
   showMarkers?: boolean
   padL?: number
   padR?: number
@@ -53,6 +57,25 @@ export function LineChart({
     return `M${sx(pts[0][0]).toFixed(1)} ${sy(yMin).toFixed(1)} ` +
       pts.map((p) => `L${sx(p[0]).toFixed(1)} ${sy(p[1]).toFixed(1)}`).join(' ') +
       ` L${sx(pts[pts.length - 1][0]).toFixed(1)} ${sy(yMin).toFixed(1)} Z`
+  }
+
+  // 悬浮提示：记录当前命中哪个 series 的哪个点
+  const [hover, setHover] = useState<{ si: number; pi: number } | null>(null)
+  let tipBox: { x: number; y: number; w: number; h: number; lines: string[]; color: string } | null = null
+  if (hover) {
+    const s = series[hover.si]
+    const p = s?.points[hover.pi]
+    if (p && tooltip) {
+      const lines = tooltip(p[0], p[1]).split('\n')
+      const lineW = (l: string) => l.split('').reduce((w, ch) => w + (/[一-龥]/.test(ch) ? 12 : 6.6), 0)
+      const w = Math.max(...lines.map(lineW)) + 18
+      const h = lines.length * 16 + 12
+      let bx = sx(p[0]) + 12
+      if (bx + w > W - padR) bx = sx(p[0]) - 12 - w
+      let by = sy(p[1]) - h - 10
+      if (by < padT) by = sy(p[1]) + 10
+      tipBox = { x: bx, y: by, w, h, lines, color: s.color }
+    }
   }
 
   return (
@@ -81,7 +104,17 @@ export function LineChart({
             strokeLinecap="round"
           />
           {showMarkers && s.points.map((p, j) => (
-            <circle key={'m' + j} cx={sx(p[0])} cy={sy(p[1])} r={3.5} fill="var(--surface)" stroke={s.color} strokeWidth={2} />
+            <g key={'m' + j}>
+              {/* 透明大圆扩大命中范围，方便悬浮 */}
+              <circle
+                cx={sx(p[0])} cy={sy(p[1])} r={11} fill="transparent"
+                onMouseEnter={() => setHover({ si: i, pi: j })}
+                onMouseLeave={() => setHover(null)}
+                style={{ cursor: tooltip ? 'pointer' : 'default' }}
+              />
+              <circle cx={sx(p[0])} cy={sy(p[1])} r={hover && hover.si === i && hover.pi === j ? 5 : 3.5}
+                fill="var(--surface)" stroke={s.color} strokeWidth={2} style={{ pointerEvents: 'none' }} />
+            </g>
           ))}
         </g>
       ))}
@@ -89,6 +122,15 @@ export function LineChart({
         <g>
           <line x1={padL} y1={sy(target)} x2={W - padR} y2={sy(target)} stroke="var(--brand-2)" strokeWidth={1.5} strokeDasharray="5 4" />
           <text x={W - padR} y={sy(target) - 4} textAnchor="end" className="axis target">{yFormat(target)}</text>
+        </g>
+      )}
+      {tipBox && (
+        <g style={{ pointerEvents: 'none' }}>
+          <line x1={sx(series[hover!.si].points[hover!.pi][0])} y1={sy(yMin)} x2={sx(series[hover!.si].points[hover!.pi][0])} y2={sy(series[hover!.si].points[hover!.pi][1])} stroke={tipBox.color} strokeWidth={1} strokeDasharray="3 3" opacity={0.5} />
+          <rect x={tipBox.x} y={tipBox.y} width={tipBox.w} height={tipBox.h} rx={6} fill="var(--surface)" stroke="var(--border-2)" opacity={0.97} />
+          {tipBox.lines.map((l, k) => (
+            <text key={k} x={tipBox!.x + 9} y={tipBox!.y + 16 * (k + 1) - 3} className="chart-tip">{l}</text>
+          ))}
         </g>
       )}
     </svg>
