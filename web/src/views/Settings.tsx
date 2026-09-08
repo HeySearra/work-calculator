@@ -29,7 +29,7 @@ export function Settings() {
       payType: py.type, payDay: String(py.day), payRule: py.rule, payAmt: String(py.amount),
       pnPaidMonths: String(pn.paidMonths), pnMinMonths: String(pn.minMonths),
       pnPers: String(pn.personal), pnWage: String(pn.wage), pnBase: String(pn.base),
-      pnIdx: String(pn.idx), pnRate: String(pn.rate), pnAge: String(pn.age), pnCurAge: String(pn.curAge),
+      pnIdx: String(pn.idx), pnRate: String(pn.rate), pnAge: String(pn.age), pnBirth: pn.birthDate,
       pnAnnBal: String(pn.annBal), pnAnnComp: String(pn.annCompRate), pnAnnPers: String(pn.annPersRate),
       frTgt: String(fr.target), frSpend: String(fr.spend), frSave: String(fr.save), frRate: String(fr.rate),
       ivTgt: String(iv.target), ivBench: iv.benchmark, ivBase: String(iv.base),
@@ -50,7 +50,7 @@ export function Settings() {
       d.user.city = f.city
       py.type = (f.payType as 'current_month' | 'next_month'); py.day = num('payDay'); py.rule = (f.payRule as 'advance' | 'delay' | 'same'); py.amount = num('payAmt')
       pn.paidMonths = num('pnPaidMonths'); pn.minMonths = num('pnMinMonths'); pn.paid = pn.paidMonths / 12
-      pn.personal = num('pnPers'); pn.wage = num('pnWage'); pn.base = num('pnBase'); pn.idx = num('pnIdx'); pn.rate = num('pnRate'); pn.age = num('pnAge'); pn.curAge = num('pnCurAge')
+      pn.personal = num('pnPers'); pn.wage = num('pnWage'); pn.base = num('pnBase'); pn.idx = num('pnIdx'); pn.rate = num('pnRate'); pn.age = num('pnAge'); pn.birthDate = f.pnBirth
       pn.annBal = num('pnAnnBal'); pn.annCompRate = num('pnAnnComp'); pn.annPersRate = num('pnAnnPers')
       fr.target = num('frTgt'); fr.spend = num('frSpend'); fr.save = num('frSave'); fr.rate = num('frRate')
       iv.target = num('ivTgt')
@@ -181,7 +181,7 @@ export function Settings() {
               {field('最低缴费月数', 'pnMinMonths', 'number')}
             </div>
             <div className="fld-row">
-              {field('当前年龄', 'pnCurAge', 'number')}
+              {field('出生日期', 'pnBirth', 'date')}
               {field('缴费工资(估算参考)', 'pnWage', 'number')}
               {field('计发指数', 'pnIdx', 'number', '0.01')}
               {field('记账利率%', 'pnRate', 'number', '0.1')}

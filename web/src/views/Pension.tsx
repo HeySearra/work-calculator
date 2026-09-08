@@ -16,8 +16,8 @@ export function Pension() {
   const minYears = pn.minMonths / 12
   const remainMinYears = Math.max(0, (pn.minMonths - pn.paidMonths) / 12)
 
-  const age = pn.curAge > 0
-    ? pn.curAge
+  const age = pn.birthDate
+    ? (now.getTime() - new Date(pn.birthDate).getTime()) / 365.25 / 86400000
     : (now.getTime() - new Date(p.hireDate).getTime()) / 365.25 / 86400000 + 22
   const yearsToRetire = Math.max(0, pn.age - age)
 

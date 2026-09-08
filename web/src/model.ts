@@ -40,7 +40,7 @@ export interface Pension {
   annBal: number      // 企业年金 / 职业年金账户余额
   annCompRate: number // 年金单位缴费比例（%）
   annPersRate: number // 年金个人缴费比例（%）
-  curAge: number      // 当前年龄（手动设置；0 表示未设置，回退到按入职日期推算）
+  birthDate: string   // 出生日期（YYYY-MM-DD；空表示未设置，回退到按入职日期推算）
 }
 
 export interface Fire {
@@ -162,7 +162,7 @@ export const DEFAULT: AppState = {
     unpunchedMode: 'standard',
   },
   payday: { type: 'next_month', day: 15, rule: 'advance', amount: 13500 },
-  pension: { paid: 8.25, paidMonths: 99, minMonths: 180, personal: 51200, wage: 8321, base: 8321, idx: 1.0, rate: 4, age: 50, annBal: 0, annCompRate: 8, annPersRate: 4, curAge: 0 },
+  pension: { paid: 8.25, paidMonths: 99, minMonths: 180, personal: 51200, wage: 8321, base: 8321, idx: 1.0, rate: 4, age: 50, annBal: 0, annCompRate: 8, annPersRate: 4, birthDate: '' },
   fire: { target: 1000000, spend: 40000, save: 6000, rate: 5 },
   invest: {
     target: 6,
