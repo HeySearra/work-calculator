@@ -1,15 +1,29 @@
 import { useRef, useState } from 'react'
 import { useStore } from '../store'
-import { DEFAULT, mergeState, BENCH_PRESETS } from '../model'
+import { DEFAULT, mergeState, BENCH_PRESETS, type AppState } from '../model'
 import { fmt, appToday } from '../format'
 import { holidaysToText, textToHolidays, dailyPay, payDays } from '../calc'
 import { api } from '../api'
 
 type Str = { [k: string]: string }
-function useForm(init: () => Str) {
-  const [v, setV] = useState<Str>(init)
-  const set = (k: string, val: string) => setV((s) => ({ ...s, [k]: val }))
-  return [v, set] as const
+
+// 把表单值写回 AppState（纯函数，供即时保存复用）
+function applyForm(d: AppState, f: Str) {
+  const num = (k: string) => Number(f[k]) || 0
+  const p = d.profile, pn = d.pension, fr = d.fire, iv = d.invest, py = d.payday
+  p.workStart = f.workStart; p.workEnd = f.workEnd; p.lunchStart = f.lunchStart; p.lunchEnd = f.lunchEnd
+  p.salary = num('salary'); p.otW = num('otW'); p.otWe = num('otWe'); p.hireDate = f.hireDate
+  p.bonus = num('bonus'); p.bonusAmort = f.bonusAmort === '1'; p.unpunchedMode = (f.unpunchedMode as 'standard' | 'off')
+  d.user.city = f.city
+  py.type = (f.payType as 'current_month' | 'next_month'); py.day = num('payDay'); py.rule = (f.payRule as 'advance' | 'delay' | 'same'); py.amount = num('payAmt')
+  pn.paidMonths = num('pnPaidMonths'); pn.minMonths = num('pnMinMonths'); pn.paid = pn.paidMonths / 12
+  pn.personal = num('pnPers'); pn.wage = num('pnWage'); pn.base = num('pnBase'); pn.idx = num('pnIdx'); pn.rate = num('pnRate'); pn.age = num('pnAge'); pn.birthDate = f.pnBirth
+  pn.annBal = num('pnAnnBal'); pn.annCompRate = num('pnAnnComp'); pn.annPersRate = num('pnAnnPers')
+  fr.target = num('frTgt'); fr.spend = num('frSpend'); fr.save = num('frSave'); fr.rate = num('frRate')
+  iv.target = num('ivTgt')
+  iv.benchmark = f.ivBench
+  iv.base = num('ivBase')
+  d.holidays = textToHolidays(f.holidays)
 }
 
 export function Settings() {
@@ -18,8 +32,10 @@ export function Settings() {
   const loadState = useStore((s) => s.loadState)
   const [msg, setMsg] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
+  const saveTimer = useRef<number | null>(null)
+  const msgTimer = useRef<number | null>(null)
 
-  const [f, setF] = useForm(() => {
+  const initForm = (): Str => {
     const p = S.profile, pn = S.pension, fr = S.fire, iv = S.invest, py = S.payday
     return {
       workStart: p.workStart, workEnd: p.workEnd, lunchStart: p.lunchStart, lunchEnd: p.lunchEnd,
@@ -35,30 +51,45 @@ export function Settings() {
       ivTgt: String(iv.target), ivBench: iv.benchmark, ivBase: String(iv.base),
       holidays: holidaysToText(S.holidays),
     }
-  })
+  }
+
+  const [f, setV] = useState<Str>(initForm)
+  const fRef = useRef<Str>(f)
+
+  // 表单与 store 重新同步（导入 / 恢复默认后调用）
+  function resetForm() {
+    const next = initForm()
+    fRef.current = next
+    setV(next)
+  }
+
+  function flash(text: string) {
+    setMsg(text)
+    if (msgTimer.current) clearTimeout(msgTimer.current)
+    msgTimer.current = window.setTimeout(() => setMsg(''), 1600)
+  }
+
+  // 即时保存：防抖 350ms，避免逐字输入时频繁请求
+  function scheduleSave(next: Str) {
+    if (saveTimer.current) clearTimeout(saveTimer.current)
+    saveTimer.current = window.setTimeout(() => {
+      commit((d) => applyForm(d, next))
+        .then(() => flash('已保存'))
+        .catch(() => flash('保存失败'))
+    }, 350)
+  }
+
+  // 改动即保存
+  function setField(k: string, val: string) {
+    const next = { ...fRef.current, [k]: val }
+    fRef.current = next
+    setV(next)
+    scheduleSave(next)
+  }
 
   function num(k: string) { return Number(f[k]) || 0 }
   const pd = payDays(appToday(), S.holidays)
   const dp = dailyPay(S.profile, appToday(), S.holidays)
-
-  function save() {
-    commit((d) => {
-      const p = d.profile, pn = d.pension, fr = d.fire, iv = d.invest, py = d.payday
-      p.workStart = f.workStart; p.workEnd = f.workEnd; p.lunchStart = f.lunchStart; p.lunchEnd = f.lunchEnd
-      p.salary = num('salary'); p.otW = num('otW'); p.otWe = num('otWe'); p.hireDate = f.hireDate
-      p.bonus = num('bonus'); p.bonusAmort = f.bonusAmort === '1'; p.unpunchedMode = (f.unpunchedMode as 'standard' | 'off')
-      d.user.city = f.city
-      py.type = (f.payType as 'current_month' | 'next_month'); py.day = num('payDay'); py.rule = (f.payRule as 'advance' | 'delay' | 'same'); py.amount = num('payAmt')
-      pn.paidMonths = num('pnPaidMonths'); pn.minMonths = num('pnMinMonths'); pn.paid = pn.paidMonths / 12
-      pn.personal = num('pnPers'); pn.wage = num('pnWage'); pn.base = num('pnBase'); pn.idx = num('pnIdx'); pn.rate = num('pnRate'); pn.age = num('pnAge'); pn.birthDate = f.pnBirth
-      pn.annBal = num('pnAnnBal'); pn.annCompRate = num('pnAnnComp'); pn.annPersRate = num('pnAnnPers')
-      fr.target = num('frTgt'); fr.spend = num('frSpend'); fr.save = num('frSave'); fr.rate = num('frRate')
-      iv.target = num('ivTgt')
-      iv.benchmark = f.ivBench
-      iv.base = num('ivBase')
-      d.holidays = textToHolidays(f.holidays)
-    }).then(() => setMsg('设置已保存')).catch(() => setMsg('保存失败'))
-  }
 
   function resetDefault() {
     if (!confirm('恢复默认设置？现有收支/盈亏记录保留。')) return
@@ -68,7 +99,7 @@ export function Settings() {
       d.pension = JSON.parse(JSON.stringify(DEFAULT.pension))
       d.fire = JSON.parse(JSON.stringify(DEFAULT.fire))
       d.invest = JSON.parse(JSON.stringify(DEFAULT.invest))
-    }).then(() => setMsg('已恢复默认'))
+    }).then(() => { resetForm(); setMsg('已恢复默认') })
   }
 
   async function exportData() {
@@ -88,6 +119,7 @@ export function Settings() {
       const obj = JSON.parse(text)
       await api.importData(mergeState(obj))
       await loadState()
+      resetForm()
       setMsg('已导入')
     } catch {
       setMsg('导入失败：JSON 格式错误')
@@ -99,7 +131,7 @@ export function Settings() {
     return (
       <label className="fld">
         <span>{label}</span>
-        <input type={type} step={step} value={f[k]} onChange={(e) => setF(k, e.target.value)} />
+        <input type={type} step={step} value={f[k]} onChange={(e) => setField(k, e.target.value)} />
       </label>
     )
   }
@@ -128,7 +160,7 @@ export function Settings() {
             </div>
             <label className="fld">
               <span>年终奖分摊到月薪</span>
-              <select value={f.bonusAmort} onChange={(e) => setF('bonusAmort', e.target.value)}>
+              <select value={f.bonusAmort} onChange={(e) => setField('bonusAmort', e.target.value)}>
                 <option value="0">不摊</option><option value="1">分摊</option>
               </select>
             </label>
@@ -138,11 +170,11 @@ export function Settings() {
             </div>
             <div className="radio-group">
               <label className="radio-card">
-                <input type="radio" name="unpunched" value="standard" checked={f.unpunchedMode === 'standard'} onChange={(e) => setF('unpunchedMode', e.target.value)} />
+                <input type="radio" name="unpunched" value="standard" checked={f.unpunchedMode === 'standard'} onChange={(e) => setField('unpunchedMode', e.target.value)} />
                 <span>按默认作息（未打卡的工作日按规定上下班时间计算时长）</span>
               </label>
               <label className="radio-card">
-                <input type="radio" name="unpunched" value="off" checked={f.unpunchedMode === 'off'} onChange={(e) => setF('unpunchedMode', e.target.value)} />
+                <input type="radio" name="unpunched" value="off" checked={f.unpunchedMode === 'off'} onChange={(e) => setField('unpunchedMode', e.target.value)} />
                 <span>视为当天没上班（未打卡的工作日不计入在司时长）</span>
               </label>
             </div>
@@ -202,7 +234,7 @@ export function Settings() {
             </div>
             <label className="fld">
               <span>基准指数</span>
-              <select value={f.ivBench} onChange={(e) => setF('ivBench', e.target.value)}>
+              <select value={f.ivBench} onChange={(e) => setField('ivBench', e.target.value)}>
                 {BENCH_PRESETS.map((p) => (
                   <option key={p.key} value={p.key}>{p.name}</option>
                 ))}
@@ -214,7 +246,6 @@ export function Settings() {
       </div>
 
       <div className="row" style={{ marginTop: 14 }}>
-        <button className="btn primary" onClick={save}>保存设置</button>
         <button className="btn ghost" onClick={resetDefault}>恢复默认</button>
         <button className="btn ghost" onClick={exportData}>导出数据</button>
         <button className="btn ghost" onClick={() => fileRef.current?.click()}>导入数据</button>
