@@ -34,14 +34,44 @@ export function Pension() {
   const est = basePension + personalPension
 
   const [target, setTarget] = useState(8000)
-  // 反推：缺口 = 目标 - 当前预估总额（基础+个人），避免少减基础养老金导致高估缴费年限
-  const needBasic = Math.max(0, target - basePension - personalPension)
-  // 基础养老金 = ((工资 + 指数化工资)/2) × 缴费年限 × 1%
-  // 反推缴费年限 = 需要的基础养老金 ÷ (((工资 + 指数化工资)/2) × 1%)
-  const needYears = Math.max(0, (needBasic * 2) / (pn.wage * (1 + pn.idx)) / 0.01)
-  const needPers = Math.max(0, (target - basePension) * accountMonths)
+
+  // 反推：同时考虑基础养老金和个人账户一起增长（含记账利率复利）
+  // 基础养老金每年增长 = ((工资 + 指数化工资)/2) × 1%
+  const basePensionPerYear = ((pn.wage + indexedWage) / 2) * 0.01
+  const r = pn.rate / 100
+  // 再缴 n 年后的预估月退休金
+  const projectedTotal = (n: number): number => {
+    if (n <= 0) return est
+    const basePart = basePensionPerYear * (paidYears + n)
+    let fv = 0
+    if (r <= 0) {
+      fv = personalMonthly * 12 * n
+    } else {
+      fv = personalMonthly * 12 * (Math.pow(1 + r, n) - 1) / r
+    }
+    const personalPart = (pn.personal + fv) / accountMonths
+    return basePart + personalPart
+  }
+  // 二分搜索还需缴多少年才能达到目标
+  let needYears = 0
+  if (target > est) {
+    let lo = 0
+    let hi = 100
+    for (let i = 0; i < 80; i++) {
+      const mid = (lo + hi) / 2
+      if (projectedTotal(mid) < target) lo = mid
+      else hi = mid
+    }
+    needYears = lo
+  }
+  // 达到目标时个人账户预计余额
+  const needPers = Math.max(0, target > est
+    ? pn.personal + personalMonthly * 12 * (r <= 0 ? needYears : (Math.pow(1 + r, needYears) - 1) / r)
+    : 0)
+  // 若想在退休年龄前刚好达成目标，平均每月需缴存多少（线性口径，不含复利）
   const remainMonths = Math.max(1, Math.round(yearsToRetire * 12))
-  const needMonthly = Math.max(0, (needPers - pn.personal) / remainMonths)
+  const targetPersonalAtRetire = Math.max(0, (target - basePensionPerYear * (paidYears + yearsToRetire)) * accountMonths)
+  const needMonthly = Math.max(0, (targetPersonalAtRetire - pn.personal) / remainMonths)
 
   const progress = Math.min(100, (pn.paidMonths / pn.minMonths) * 100)
 
