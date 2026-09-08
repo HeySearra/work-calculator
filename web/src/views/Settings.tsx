@@ -198,16 +198,13 @@ export function Settings() {
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
               <button className="btn ghost" style={{ padding: '6px 12px', fontSize: 12 }} onClick={loadHolidays}>获取 {appToday().getFullYear()} 年法定节假日</button>
             </div>
-            <div className="radio-group">
-              <label className="radio-card">
-                <input type="radio" name="unpunched" value="standard" checked={f.unpunchedMode === 'standard'} onChange={(e) => setField('unpunchedMode', e.target.value)} />
-                <span>按默认作息（未打卡的工作日按规定上下班时间计算时长）</span>
-              </label>
-              <label className="radio-card">
-                <input type="radio" name="unpunched" value="off" checked={f.unpunchedMode === 'off'} onChange={(e) => setField('unpunchedMode', e.target.value)} />
-                <span>视为当天没上班（未打卡的工作日不计入在司时长）</span>
-              </label>
-            </div>
+            <label className="fld">
+              <span>未打卡处理方式</span>
+              <select value={f.unpunchedMode} onChange={(e) => setField('unpunchedMode', e.target.value)}>
+                <option value="standard">按默认作息（未打卡的工作日按规定上下班时间计算时长）</option>
+                <option value="off">视为当天没上班（未打卡的工作日不计入在司时长）</option>
+              </select>
+            </label>
             <div className="hint">本月 <b>{pd}</b> 天 · 日薪 <b>{fmt(dp)}</b></div>
           </div>
         </div>
