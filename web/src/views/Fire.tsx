@@ -44,17 +44,17 @@ export function Fire() {
       </div>
 
       <div className="grid" style={{ marginBottom: 14 }}>
-        <div className="card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-          <div className="lbl" style={{ color: 'var(--text-2)', fontSize: 13, marginBottom: 8 }}>年支出</div>
-          <div className="big tnum" style={{ fontSize: 22 }}>{fmt(F.spend)}</div>
-          <div className="hint">4% 法则需本金 {fmt(F.spend / 0.04)}</div>
+        <div className="card" style={{ padding: '18px 20px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <div className="lbl" style={{ color: 'var(--text-2)', fontSize: 13 }}>年支出</div>
+          <div className="big tnum" style={{ fontSize: 26, margin: '6px 0 4px' }}>{fmt(F.spend)}</div>
+          <div className="sub" style={{ color: 'var(--text-3)' }}>4% 法则需本金 {fmt(F.spend / 0.04)}</div>
         </div>
-        <div className="card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-          <div className="lbl" style={{ color: 'var(--text-2)', fontSize: 13, marginBottom: 8 }}>月储蓄</div>
-          <div className="big tnum" style={{ fontSize: 22 }}>{fmt(F.save)}</div>
-          <div className="hint">储蓄率 {(saveRate * 100).toFixed(0)}%</div>
+        <div className="card" style={{ padding: '18px 20px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <div className="lbl" style={{ color: 'var(--text-2)', fontSize: 13 }}>月储蓄</div>
+          <div className="big tnum" style={{ fontSize: 26, margin: '6px 0 4px' }}>{fmt(F.save)}</div>
+          <div className="sub" style={{ color: 'var(--text-3)' }}>储蓄率 {(saveRate * 100).toFixed(0)}%</div>
         </div>
-        <div className="card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="card" style={{ padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Ring value={progress * 100} max={100} color="var(--brand-2)" label={(progress * 100).toFixed(0) + '%'} sub="进度" />
         </div>
       </div>
