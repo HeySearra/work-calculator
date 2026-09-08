@@ -1,6 +1,6 @@
 import { useStore } from '../store'
 import { fmt, fmtN } from '../format'
-import { LineChart, Ring } from '../components/Charts'
+import { LineChart } from '../components/Charts'
 import type { AccountItem } from '../model'
 
 const GROUPS: { key: keyof ReturnType<typeof groups>; label: string; sign: 1 | -1 }[] = [
@@ -33,7 +33,8 @@ export function Assets() {
   const yMin = Math.min(...ys, net) * 0.95
   const yMax = Math.max(...ys, net) * 1.05
   const pts = S.trend.map((t, i) => [i, t.v] as [number, number])
-  const xTicks = S.trend.map((t, i) => ({ x: i, text: i % 2 === 0 ? t.ym.slice(5) : '' }))
+  const step = S.trend.length <= 12 ? 2 : S.trend.length <= 24 ? 3 : 6
+  const xTicks = S.trend.map((t, i) => ({ x: i, text: i % step === 0 ? t.ym.slice(5) : '' }))
 
   function setItem(group: keyof ReturnType<typeof groups>, idx: number, patch: Partial<AccountItem>) {
     commit((d) => {
@@ -66,22 +67,16 @@ export function Assets() {
         <div className="sub">资产 {fmt(posTotal)} · 负债 {fmt(sums.debts)}</div>
       </div>
 
-      <div className="grid" style={{ marginBottom: 14 }}>
-        <div className="card">
-          <h3>资产趋势（近 12 个月）</h3>
-          <LineChart
-            width={520} height={200}
-            x0={0} x1={S.trend.length - 1}
-            yMin={yMin} yMax={yMax}
-            series={[{ points: pts, color: 'var(--brand)', fill: true }]}
-            xTicks={xTicks}
-            yFormat={(n) => fmtN(n / 10000, 1) + 'w'}
-          />
-        </div>
-        <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-          <Ring value={posTotal - sums.debts} max={posTotal} color="var(--brand-2)" label={fmtN((posTotal - sums.debts) / 10000, 1) + 'w'} sub="净资产/总资产" />
-          <div className="hint" style={{ marginTop: 8 }}>资产即负债的蓄水池</div>
-        </div>
+      <div className="card" style={{ marginBottom: 14 }}>
+        <h3>资产趋势（历史所有月份）</h3>
+        <LineChart
+          width={1100} height={240}
+          x0={0} x1={S.trend.length - 1}
+          yMin={yMin} yMax={yMax}
+          series={[{ points: pts, color: 'var(--brand)', fill: true }]}
+          xTicks={xTicks}
+          yFormat={(n) => fmtN(n / 10000, 1) + 'w'}
+        />
       </div>
 
       <div className="grid">
