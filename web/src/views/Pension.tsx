@@ -205,11 +205,11 @@ export function Pension() {
             <h3 className="tnum">{needYears.toFixed(1)}<span className="u">年</span></h3>
           </div>
           <div className="kv-cell">
-            <p>个人账户需</p>
+            <p>养老个人账户需</p>
             <h3 className="tnum">{fmt(needPers)}</h3>
           </div>
           <div className="kv-cell">
-            <p>月缴存需达到</p>
+            <p>养老个人账户月缴存需达到</p>
             <h3 className="tnum">{fmt(needMonthly)}</h3>
           </div>
         </div>
