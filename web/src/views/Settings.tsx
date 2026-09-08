@@ -191,11 +191,11 @@ export function Settings() {
                 <option value="0">不摊</option><option value="1">分摊</option>
               </select>
             </label>
-            <label className="fld" style={{ marginBottom: 8 }}>
+            <label className="fld">
               <span>节假日（例 10-01* 表示补班，多个用英文逗号分隔）</span>
               <input value={f.holidays} onChange={(e) => setField('holidays', e.target.value)} placeholder="10-01,10-02,10-01*" />
             </label>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
               <button className="btn ghost" style={{ padding: '6px 12px', fontSize: 12 }} onClick={loadHolidays}>获取 {appToday().getFullYear()} 年法定节假日</button>
             </div>
             <div className="radio-group">
@@ -288,9 +288,9 @@ export function Settings() {
                   ))}
                 </select>
               </label>
-              <button className="btn ghost" onClick={syncBase} disabled={!f.pnProvince}>获取计发基数</button>
+              <button className="btn ghost" style={{ justifySelf: 'start' }} onClick={syncBase} disabled={!f.pnProvince}>获取计发基数</button>
             </div>
-            <div className="hint" style={{ margin: '8px 0 2px' }}>企业年金 / 职业年金（补充养老，单位与个人共同缴费）</div>
+            <div className="hint">企业年金 / 职业年金（补充养老，单位与个人共同缴费）</div>
             <div className="fld-row">
               {field('年金账户余额', 'pnAnnBal', 'number')}
               {field('单位缴费%', 'pnAnnComp', 'number', '0.1')}

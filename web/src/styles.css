@@ -86,6 +86,13 @@ body {
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; box-shadow: var(--shadow); }
 .card h3 { margin: 0 0 12px; font-size: 14px; color: var(--text-2); font-weight: 600; }
 .card.pad0 { padding: 0; }
+/* 设置页表单卡片：统一内部垂直节奏（标题与字段、字段块之间等距） */
+.settings-col .card { display: flex; flex-direction: column; gap: 12px; }
+.settings-col .card h3 { margin: 0; }
+.settings-col .card .fld-row,
+.settings-col .card .radio-group,
+.settings-col .card > .fld,
+.settings-col .card > .hint { margin: 0; }
 /* 卡片内指标统一：与 .td-card / .summary 视觉一致 */
 .card .lbl { font-size: 13px; color: var(--text-2); }
 .card .big { font-size: 26px; font-weight: 700; margin: 6px 0 4px; line-height: 1.15; font-variant-numeric: tabular-nums; }
