@@ -196,7 +196,7 @@ export function Settings() {
               <input value={f.holidays} onChange={(e) => setField('holidays', e.target.value)} placeholder="10-01,10-02,10-01*" />
             </label>
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <button className="btn ghost" style={{ padding: '6px 12px', fontSize: 12 }} onClick={loadHolidays}>获取 {appToday().getFullYear()} 年法定节假日</button>
+              <button className="btn ghost" style={{ padding: '6px 12px', fontSize: 12 }} onClick={loadHolidays}>获取今年法定节假日</button>
             </div>
             <label className="fld">
               <span>未打卡处理方式</span>
