@@ -1,14 +1,17 @@
 #!/bin/bash
-# git-archive.sh — 自动把本地代码改动提交并推送到 GitHub（个人存档）
+# git-archive.sh — 把本地代码改动提交到本地 git（**不推送**，纯本地存档）
 #
-# 设计：
-#   1) git add -A（严格遵守 .gitignore，不会提交 node_modules / dist / 数据库等）
-#   2) 若有改动 -> 提交，message 带时间戳
-#   3) 若本地领先远端 -> 推送（先确认网络可达，离线则跳过，下次再推）
-# 由 launchd 定时调用，也可手动运行：bash /Users/searra/WorkBuddy/纯文本/git-archive.sh
+# 设计变更（2026-09-08）：
+#   - 取消了自动 push：脚本只 commit 到本地，推送由人工决定（git push origin main）
+#   - commit message 不再用固定时间戳，改为根据实际改动文件生成；也可手动传入
+#   - launchd 定时任务已禁用，脚本只在手动调用时运行
 #
-# 注意：仅提交“已跟踪或新出现”的源码文件；运行时数据（server/data）、构建产物
-# （web/dist、node_modules）、密钥（.env）、WorkBuddy 内部（.workbuddy）均被忽略。
+# 用法：
+#   bash git-archive.sh                 # 自动生成 message（列出改动的文件）
+#   bash git-archive.sh "feat: 新增XXX"  # 使用自定义 message
+#
+# 注意：严格遵守 .gitignore，不会提交 node_modules / dist / 数据库等。
+#       server/data、web/dist、node_modules、.env、.workbuddy 均被忽略。
 
 set -u
 
@@ -34,25 +37,37 @@ echo "[$TS] run" >>"$LOG"
 # 暂存（尊重 .gitignore）
 "$GIT" add -A
 
-# 有改动则提交
-if ! "$GIT" diff --cached --quiet; then
-  "$GIT" commit -m "auto-archive: 本地改动 $TS" >>"$LOG" 2>&1
-  echo "[$TS] committed" >>"$LOG"
+# 无改动则直接结束
+if "$GIT" diff --cached --quiet; then
+  echo "[$TS] no changes" >>"$LOG"
+  exit 0
 fi
 
-# 若本地领先远端，则推送
-AHEAD=$("$GIT" rev-list --count origin/main..HEAD 2>/dev/null || echo 0)
-if [ "$AHEAD" -gt 0 ]; then
-  # 先确认网络可达，离线则跳过，等下次
-  if "$GIT" ls-remote --heads origin >/dev/null 2>&1; then
-    if "$GIT" push origin main >>"$LOG" 2>&1; then
-      echo "[$TS] pushed ($AHEAD commit(s))" >>"$LOG"
-    else
-      echo "[$TS] push failed (see log)" >>"$LOG"
-    fi
+# ===== 根据实际改动生成 commit message =====
+MSG="${1:-}"
+if [ -z "$MSG" ]; then
+  # 改动文件清单（已暂存）
+  FILES=$("$GIT" diff --cached --name-only)
+  CNT=$(echo "$FILES" | grep -c . || true)
+
+  if [ "$CNT" -eq 1 ]; then
+    MSG="更新 $FILES"
   else
-    echo "[$TS] offline, skip push (will retry later)" >>"$LOG"
+    # 多个文件：取前 3 个文件名（仅 basename），其余用计数概括
+    NAMES=$(echo "$FILES" | head -3 | xargs -n1 basename | paste -sd '、' -)
+    if [ "$CNT" -gt 3 ]; then
+      MSG="更新 $CNT 个文件（$NAMES 等）"
+    else
+      MSG="更新 $CNT 个文件（$NAMES）"
+    fi
   fi
 fi
+
+"$GIT" commit -m "$MSG" >>"$LOG" 2>&1
+echo "[$TS] committed: $MSG" >>"$LOG"
+echo "$MSG"
+
+# 不推送。需要同步到 GitHub 时请手动执行：
+#   cd /Users/searra/WorkBuddy/纯文本 && git push origin main
 
 exit 0
