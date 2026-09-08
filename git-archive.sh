@@ -1,14 +1,14 @@
 #!/bin/bash
-# git-archive.sh — 把本地代码改动提交到本地 git（**不推送**，纯本地存档）
+# git-archive.sh — 把本地代码改动提交到本地 git 并推送到 GitHub
 #
 # 设计变更（2026-09-08）：
-#   - 取消了自动 push：脚本只 commit 到本地，推送由人工决定（git push origin main）
+#   - 默认 commit 后立即 push 到 origin main（用户要求：本地 commit 之后直接 push）
 #   - commit message 不再用固定时间戳，改为根据实际改动文件生成；也可手动传入
 #   - launchd 定时任务已禁用，脚本只在手动调用时运行
 #
 # 用法：
-#   bash git-archive.sh                 # 自动生成 message（列出改动的文件）
-#   bash git-archive.sh "feat: 新增XXX"  # 使用自定义 message
+#   bash git-archive.sh                 # 自动生成 message（列出改动的文件）+ 推送
+#   bash git-archive.sh "feat: 新增XXX"  # 使用自定义 message + 推送
 #
 # 注意：严格遵守 .gitignore，不会提交 node_modules / dist / 数据库等。
 #       server/data、web/dist、node_modules、.env、.workbuddy 均被忽略。
@@ -67,7 +67,12 @@ fi
 echo "[$TS] committed: $MSG" >>"$LOG"
 echo "$MSG"
 
-# 不推送。需要同步到 GitHub 时请手动执行：
-#   cd /Users/searra/WorkBuddy/纯文本 && git push origin main
+# commit 后立即推送到 GitHub
+"$GIT" push origin main >>"$LOG" 2>&1
+if [ $? -eq 0 ]; then
+  echo "[$TS] pushed -> origin/main" >>"$LOG"
+else
+  echo "[$TS] push FAILED (check network/remote)" >>"$LOG"
+fi
 
 exit 0
