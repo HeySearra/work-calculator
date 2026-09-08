@@ -125,7 +125,12 @@ export function computePayday(now: Date, py: Payday): PaydayResult {
   } else if (rule === 'delay') {
     while ([0, 6].includes(next.getDay())) next = new Date(next.getTime() + 86400000)
   }
-  const last = new Date(next.getFullYear(), next.getMonth() - 1, Math.min(day, 28), 10, 0, 0)
+  // 上一次发薪日：先按 next - 1 month 算；若该日期还在未来（说明当月还没到发薪日），
+  // 说明上上次发薪日才是真正的「上一次」，要再往前推 1 个月
+  let last = new Date(next.getFullYear(), next.getMonth() - 1, Math.min(day, 28), 10, 0, 0)
+  if (last > now) {
+    last = new Date(last.getFullYear(), last.getMonth() - 1, Math.min(day, 28), 10, 0, 0)
+  }
   const daysLeft = Math.ceil((next.getTime() - now.getTime()) / 86400000)
   return { next, last, daysLeft }
 }
