@@ -58,6 +58,14 @@ export interface Invest {
   profitWeekly: (number | null)[]   // 每周盈亏金额（元），用户手动填写，长度 52
 }
 
+// 年度存钱追踪：以每年固定的基线打点日为周期，统计本周期净存了多少、离目标还差多少
+export interface SaveTrack {
+  target: number           // 年度存钱目标（元）
+  baselineMD: string       // 基线打点日月-日，如 "09-01"（每年此日做一次资产统计）
+  startNet: number         // 起步基线净资产（手动填的「上一个基线日」当天净资产，如去年9月1日）
+  snapshots: Record<string, number>  // 历史基线日净资产快照 { "2025-09-01": 净资产, ... }
+}
+
 // 常用基准指数预设
 export const BENCH_PRESETS: { key: string; name: string }[] = [
   { key: 'csi300', name: '沪深300' },
@@ -151,6 +159,7 @@ export interface AppState {
   pension: Pension
   fire: Fire
   invest: Invest
+  saveTrack: SaveTrack
   weekly: number[]
   monthly: { y: string; r: number }[]
   yearly: Record<string, { cum: number } | null>
@@ -178,6 +187,7 @@ export const DEFAULT: AppState = {
   payday: { type: 'next_month', day: 15, rule: 'advance', amount: 13500 },
   pension: { paid: 8.25, paidMonths: 99, minMonths: 180, personal: 51200, wage: 8321, base: 8321, idx: 1.0, rate: 4, age: 50, annBal: 0, annCompRate: 8, annPersRate: 4, birthDate: '', province: '' },
   fire: { target: 1000000, spend: 40000, save: 6000, rate: 5 },
+  saveTrack: { target: 120000, baselineMD: '09-01', startNet: 0, snapshots: {} },
   invest: {
     target: 6,
     benchmark: 'csi300',
@@ -245,6 +255,7 @@ export function mergeState(v: Partial<AppState> | null | undefined): AppState {
       return p
     })(),
     fire: { ...DEFAULT.fire, ...(v.fire || {}) },
+    saveTrack: { ...DEFAULT.saveTrack, ...(v.saveTrack || {}) },
     invest: (() => {
       const vInv: any = v.invest || {}
       const merged: any = { ...DEFAULT.invest, ...vInv }

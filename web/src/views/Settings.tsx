@@ -20,6 +20,7 @@ function applyForm(d: AppState, f: Str) {
   pn.annBal = num('pnAnnBal'); pn.annCompRate = num('pnAnnComp'); pn.annPersRate = num('pnAnnPers'); pn.province = f.pnProvince
   fr.target = num('frTgt'); fr.spend = num('frSpend'); fr.save = num('frSave'); fr.rate = num('frRate')
   iv.target = num('ivTgt')
+  d.saveTrack.target = num('svTarget'); d.saveTrack.baselineMD = f.svBaseline; d.saveTrack.startNet = num('svStart')
   iv.benchmark = f.ivBench
   iv.base = num('ivBase')
   d.holidays = textToHolidays(f.holidays)
@@ -52,6 +53,7 @@ export function Settings() {
       pnAnnBal: String(pn.annBal), pnAnnComp: String(pn.annCompRate), pnAnnPers: String(pn.annPersRate),
       frTgt: String(fr.target), frSpend: String(fr.spend), frSave: String(fr.save), frRate: String(fr.rate),
       ivTgt: String(iv.target), ivBench: iv.benchmark, ivBase: String(iv.base),
+      svTarget: String(S.saveTrack.target), svBaseline: S.saveTrack.baselineMD, svStart: String(S.saveTrack.startNet),
       holidays: holidaysToText(S.holidays),
     }
   }
@@ -292,6 +294,19 @@ export function Settings() {
               {field('单位缴费%', 'pnAnnComp', 'number', '0.1')}
               {field('个人缴费%', 'pnAnnPers', 'number', '0.1')}
             </div>
+          </div>
+
+          <div className="card">
+            <h3>年度存钱</h3>
+            <div className="fld-row">
+              {field('年度存钱目标', 'svTarget', 'number')}
+              {field('基线打点日', 'svBaseline', 'text')}
+            </div>
+            <label className="fld">
+              <span>起步基线净资产（上一个基线日当天净资产）</span>
+              <input type="number" value={f.svStart} onChange={(e) => setField('svStart', e.target.value)} placeholder="如去年 9-01 的净资产" />
+            </label>
+            <div className="hint">每年在基线打点日做资产统计。没历史数据时手动填上一个基线日的净资产；也可在「净资产」页「以今日为起点」打点。</div>
           </div>
         </div>
       </div>

@@ -45,6 +45,66 @@ export function dailyPay(p: Profile, pay: Payday, d: Date, holidays: Record<stri
   return monthlyPay(p, pay) / payDays(d, holidays)
 }
 
+// ---------- 年度存钱追踪 ----------
+export interface SaveTrackCalc {
+  prevBaseline: Date      // 上一个基线日（当前周期起点）
+  nextBaseline: Date      // 下一个基线日（当前周期终点）
+  startNet: number        // 上一个基线日净资产（快照优先，否则手动起步值）
+  curNet: number          // 当前净资产
+  saved: number           // 本周期已净存 = curNet - startNet
+  target: number          // 年度存钱目标
+  pct: number             // 存钱完成度 = saved / target（可 > 1）
+  timePct: number         // 时间进度（已过去占整个周期比例，0~1）
+  elapsedDays: number     // 本周期已过天数
+  totalDays: number       // 整个周期天数
+  remainDays: number      // 距下一个基线日剩余天数
+  remainMonths: number    // 剩余月数（按 30.44 天/月）
+  remainMoney: number     // 还差多少 = max(0, target - saved)
+  monthlyNeed: number     // 为达目标，剩余每月需净存
+}
+
+export function computeSaveTrack(
+  target: number,
+  baselineMD: string,
+  startNetManual: number,
+  snapshots: Record<string, number>,
+  curNet: number,
+  today: Date,
+): SaveTrackCalc {
+  const [bm, bd] = baselineMD.split('-').map(Number)
+  const y = today.getFullYear()
+  const thisBaseline = new Date(y, bm - 1, bd)
+  const lastBaseline = new Date(y - 1, bm - 1, bd)
+  // 上一个基线日：今天已跨过今年基线日 → 本周期从今年基线日到明年；否则从去年到今年
+  const prevBaseline = today >= thisBaseline ? thisBaseline : lastBaseline
+  const nextBaseline = new Date(prevBaseline.getFullYear() + 1, prevBaseline.getMonth(), prevBaseline.getDate())
+  const key = `${prevBaseline.getFullYear()}-${String(prevBaseline.getMonth() + 1).padStart(2, '0')}-${String(prevBaseline.getDate()).padStart(2, '0')}`
+
+  // 起点净资产：优先用历史快照，否则用用户手动填的起步基线值
+  const startNet = snapshots[key] != null && !isNaN(snapshots[key]) ? snapshots[key] : (startNetManual || 0)
+
+  const saved = curNet - startNet
+  const pct = target > 0 ? saved / target : 0
+  const MS = 86400000
+  const totalDays = Math.max(1, Math.round((nextBaseline.getTime() - prevBaseline.getTime()) / MS))
+  const elapsedDays = Math.max(0, Math.round((today.getTime() - prevBaseline.getTime()) / MS))
+  const timePct = Math.min(1, Math.max(0, elapsedDays / totalDays))
+  const remainDays = Math.max(0, Math.round((nextBaseline.getTime() - today.getTime()) / MS))
+  const remainMonths = remainDays / 30.44
+  const remainMoney = Math.max(0, target - saved)
+  const monthlyNeed = remainMonths > 0 ? remainMoney / remainMonths : 0
+
+  return {
+    prevBaseline, nextBaseline, startNet, curNet, saved, target, pct,
+    timePct, elapsedDays, totalDays, remainDays, remainMonths, remainMoney, monthlyNeed,
+  }
+}
+
+// 把日期格式化为 YYYY-MM-DD（用于基线日快照 key）
+export function dateKey(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
 // ---------- 节假日文本 ⇄ 对象 ----------
 export function holidaysToText(holidays: Record<string, number>): string {
   return Object.keys(holidays).sort().map((k) => (holidays[k] === 2 ? k + '*' : k)).join(',')

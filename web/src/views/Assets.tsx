@@ -1,7 +1,8 @@
 import { useStore } from '../store'
-import { fmt, fmtN } from '../format'
+import { fmt, fmtN, appToday } from '../format'
 import { LineChart } from '../components/Charts'
 import { computeNet, type AccountItem, type Accounts } from '../model'
+import { computeSaveTrack } from '../calc'
 
 const GROUPS: { key: keyof ReturnType<typeof useStore.getState>['S']['accounts']; label: string; sign: 1 | -1 }[] = [
   { key: 'deposits', label: '存款类', sign: 1 },
@@ -53,6 +54,10 @@ export function Assets() {
       d.accounts[group] = d.accounts[group].filter((_, i) => i !== idx)
     })
   }
+  // 以今日净资产作为「年度存钱」对比起点（上一个基线日）
+  function markToday() {
+    commit((d) => { d.saveTrack.startNet = computeNet(d.accounts) })
+  }
 
   // 较上月变化：当前值 - 上月趋势值（趋势最后一条为当前月）
   const prev = S.trend.length >= 2 ? S.trend[S.trend.length - 2] : null
@@ -72,6 +77,11 @@ export function Assets() {
     const sign = change >= 0 ? '+' : ''
     return `${arrow} 较上月 ${sign}${fmt(change)}`
   }
+
+  // 年度存钱追踪
+  const sv = S.saveTrack
+  const svCalc = computeSaveTrack(sv.target, sv.baselineMD, sv.startNet, sv.snapshots, net, appToday())
+  const fmtMD = (d: Date) => `${d.getMonth() + 1}月${d.getDate()}日`
 
   return (
     <div>
@@ -93,6 +103,60 @@ export function Assets() {
         </div>
       </div>
 
+      {/* 年度存钱区块 */}
+      <div className="card" style={{ marginBottom: 14 }}>
+        <h3 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+          <span>年度存钱</span>
+          <span className="badge" style={{ fontSize: 12, fontWeight: 500 }}>
+            周期 {fmtMD(svCalc.prevBaseline)} → {fmtMD(svCalc.nextBaseline)}
+          </span>
+        </h3>
+
+        <div className="asset-summary" style={{ marginBottom: 12 }}>
+          <div className="asset-card">
+            <div className="asset-lbl">本周期已存</div>
+            <div className="asset-big tnum">{fmt(svCalc.saved)}</div>
+            <div className="asset-change">起点 {fmt(svCalc.startNet)}</div>
+          </div>
+          <div className="asset-card">
+            <div className="asset-lbl">目标完成度</div>
+            <div className="asset-big tnum" style={{ color: svCalc.pct >= 1 ? 'var(--up)' : 'var(--text)' }}>
+              {(svCalc.pct * 100).toFixed(1)}%
+            </div>
+            <div className="asset-change">目标 {fmt(svCalc.target)}</div>
+          </div>
+          <div className="asset-card">
+            <div className="asset-lbl">还差多少</div>
+            <div className="asset-big tnum">{fmt(svCalc.remainMoney)}</div>
+            <div className="asset-change">距下一基线日 {svCalc.remainDays} 天</div>
+          </div>
+        </div>
+
+        {/* 双进度条：时间进度 vs 存钱进度 */}
+        <div style={{ marginBottom: 12 }}>
+          <div className="sv-row">
+            <span className="sv-row-lbl">时间进度</span>
+            <div className="progress"><div className="fill" style={{ width: `${svCalc.timePct * 100}%`, background: 'var(--text-3)' }} /></div>
+            <span className="sv-row-val tnum">{(svCalc.timePct * 100).toFixed(0)}%</span>
+          </div>
+          <div className="sv-row">
+            <span className="sv-row-lbl">存钱进度</span>
+            <div className="progress"><div className="fill" style={{ width: `${Math.min(100, svCalc.pct * 100)}%`, background: svCalc.pct >= 1 ? 'var(--up)' : 'var(--brand)' }} /></div>
+            <span className="sv-row-val tnum">{(svCalc.pct * 100).toFixed(1)}%</span>
+          </div>
+        </div>
+
+        <div className="hint" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <span>
+            为达目标，剩余每月需净存 <b className="tnum">{fmt(svCalc.monthlyNeed)}</b>
+            （还剩 {svCalc.remainMonths.toFixed(1)} 个月）
+          </span>
+          <button className="btn ghost" style={{ padding: '6px 12px', fontSize: 12 }} onClick={markToday}>
+            以今日为起点打点
+          </button>
+        </div>
+      </div>
+
       <div className="card" style={{ marginBottom: 14 }}>
         <h3>资产趋势（历史所有月份）</h3>
         <LineChart
@@ -107,21 +171,16 @@ export function Assets() {
 
       <div className="grid">
         {GROUPS.map((g) => (
-          <div className="card" key={g.key}>
+          <div className="card acct-card" key={g.key}>
             <h3 style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>{g.label} <span className="badge">{fmt(sums[g.key])}</span></span>
               <button className="icon-btn" onClick={() => addItem(g.key)} title="新增">＋</button>
             </h3>
             <div className="list">
               {S.accounts[g.key].map((a, idx) => (
-                <div
-                  className="list-item"
-                  key={idx}
-                  style={{ flexDirection: 'column', alignItems: 'stretch', gap: 10, padding: '12px 4px' }}
-                >
-                  {/* 第一行：账户名称 + 删除 */}
-                  <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
-                    <label className="fld" style={{ flex: 1 }}>
+                <div className="acct-item" key={idx}>
+                  <div className="acct-name-row">
+                    <label className="fld">
                       <span>账户名称</span>
                       <input
                         value={a.n}
@@ -129,55 +188,47 @@ export function Assets() {
                         placeholder="例如：招商银行活期"
                       />
                     </label>
-                    <button className="icon-btn" onClick={() => removeItem(g.key, idx)} title="删除">×</button>
+                    <button className="icon-btn acct-del" onClick={() => removeItem(g.key, idx)} title="删除">×</button>
                   </div>
-
-                  {/* 第二行：金额 / 利率 / 月供 / 剩余月数 */}
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
-                    <label className="fld" style={{ flex: '1 1 110px' }}>
+                  <div className="fld-row">
+                    <label className="fld">
                       <span>金额</span>
                       <input
                         type="number"
                         value={a.b}
                         onChange={(e) => setItem(g.key, idx, { b: Number(e.target.value) })}
                         placeholder="0"
-                        style={{ textAlign: 'right' }}
                       />
                     </label>
-
                     {a.rate != null && (
-                      <label className="fld" style={{ flex: '0 0 78px' }}>
+                      <label className="fld">
                         <span>年利率%</span>
                         <input
                           type="number" step="0.1"
                           value={a.rate}
                           onChange={(e) => setItem(g.key, idx, { rate: Number(e.target.value) })}
                           placeholder="0"
-                          style={{ textAlign: 'center' }}
                         />
                       </label>
                     )}
-
                     {g.key === 'debts' && (
                       <>
-                        <label className="fld" style={{ flex: '0 0 78px' }}>
+                        <label className="fld">
                           <span>月供</span>
                           <input
                             type="number"
                             value={a.month ?? 0}
                             onChange={(e) => setItem(g.key, idx, { month: Number(e.target.value) })}
                             placeholder="0"
-                            style={{ textAlign: 'right' }}
                           />
                         </label>
-                        <label className="fld" style={{ flex: '0 0 78px' }}>
+                        <label className="fld">
                           <span>剩余月数</span>
                           <input
                             type="number"
                             value={a.remain ?? 0}
                             onChange={(e) => setItem(g.key, idx, { remain: Number(e.target.value) })}
                             placeholder="0"
-                            style={{ textAlign: 'right' }}
                           />
                         </label>
                       </>
