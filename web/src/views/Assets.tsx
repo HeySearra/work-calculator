@@ -58,6 +58,8 @@ export function Assets() {
   function markToday() {
     commit((d) => { d.saveTrack.startNet = computeNet(d.accounts) })
   }
+  // 金额为 0 时显示空（避免 number 输入框出现前缀 0）；其他值正常显示
+  const showNum = (n?: number) => (n ? n : '')
 
   // 较上月变化：当前值 - 上月趋势值（趋势最后一条为当前月）
   const prev = S.trend.length >= 2 ? S.trend[S.trend.length - 2] : null
@@ -195,7 +197,7 @@ export function Assets() {
                       <span>金额</span>
                       <input
                         type="number"
-                        value={a.b}
+                        value={showNum(a.b)}
                         onChange={(e) => setItem(g.key, idx, { b: Number(e.target.value) })}
                         placeholder="0"
                       />
@@ -205,7 +207,7 @@ export function Assets() {
                         <span>年利率%</span>
                         <input
                           type="number" step="0.1"
-                          value={a.rate}
+                          value={showNum(a.rate)}
                           onChange={(e) => setItem(g.key, idx, { rate: Number(e.target.value) })}
                           placeholder="0"
                         />
@@ -217,7 +219,7 @@ export function Assets() {
                           <span>月供</span>
                           <input
                             type="number"
-                            value={a.month ?? 0}
+                            value={showNum(a.month)}
                             onChange={(e) => setItem(g.key, idx, { month: Number(e.target.value) })}
                             placeholder="0"
                           />
@@ -226,7 +228,7 @@ export function Assets() {
                           <span>剩余月数</span>
                           <input
                             type="number"
-                            value={a.remain ?? 0}
+                            value={showNum(a.remain)}
                             onChange={(e) => setItem(g.key, idx, { remain: Number(e.target.value) })}
                             placeholder="0"
                           />
