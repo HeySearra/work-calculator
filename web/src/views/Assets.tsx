@@ -168,6 +168,23 @@ export function Assets() {
           series={[{ points: pts, color: 'var(--brand)', fill: true }]}
           xTicks={xTicks}
           yFormat={(n) => fmtN(n / 10000, 1) + 'w'}
+          tooltip={(x) => {
+            const i = Math.max(0, Math.min(S.trend.length - 1, Math.round(x)))
+            const t = S.trend[i]
+            if (!t) return ''
+            const lines = [`${t.ym}`]
+            lines.push(`净资产 ${fmt(t.v)}`)
+            if (t.a != null) lines.push(`总资产 ${fmt(t.a)}`)
+            if (t.d != null) lines.push(`总负债 ${fmt(t.d)}`)
+            const prev = i > 0 ? S.trend[i - 1] : null
+            if (prev) {
+              const delta = t.v - prev.v
+              lines.push(`较上月 ${delta >= 0 ? '+' : ''}${fmt(delta)}`)
+            } else {
+              lines.push('首月数据')
+            }
+            return lines.join('\n')
+          }}
         />
       </div>
 
