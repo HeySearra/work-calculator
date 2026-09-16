@@ -1,22 +1,18 @@
 import { useState } from 'react'
 import { useStore } from '../store'
 import { appToday, fmt, fmtN } from '../format'
-import { isWorkday, punchInfo, fmtDur, stdMinutes, unpunchedAsOff } from '../calc'
+import { isWorkday, punchInfo, fmtDur, stdMinutes, dailyPay, unpunchedAsOff } from '../calc'
 import { Heatmap } from '../components/Heatmap'
 import { PunchModal } from '../components/PunchModal'
 
 const WK = ['日', '一', '二', '三', '四', '五', '六']
 
-function seed(s: string): number {
-  let h = 2166136261
-  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619) }
-  return (h >>> 0) % 100000
-}
-function seedIncome(key: string): number {
-  return (seed(key) % 1700) / 100 + 0.2
-}
-function incLevel(v: number): number {
-  return v < 2 ? 1 : v < 5 ? 2 : v < 9 ? 3 : v < 13 ? 4 : 5
+// 收入热力图：按「真实打卡」工时 × 时薪着色，时薪 = 日薪 / 标准工时。
+// 只显示有真实打卡的日子的收入；未打卡 / 无数据日为空白（不造假数据）。
+function incLevel(v: number, base: number): number {
+  if (base <= 0) return 1
+  const r = v / base
+  return r < 0.6 ? 1 : r < 0.85 ? 2 : r < 1.0 ? 3 : r < 1.2 ? 4 : 5
 }
 function hoursLevel(h: number): number {
   return h < 8 ? 1 : h < 9 ? 2 : h < 10 ? 3 : h < 11 ? 4 : 5
@@ -32,7 +28,7 @@ export function History() {
   const nowY = today.getFullYear()
 
   // 全年统计（截至今天）
-  let incSum = 0, hoursSum = 0, days = 0, maxH = 0, otSum = 0, lateN = 0, outSum = 0, outN = 0
+  let incSum = 0, hoursSum = 0, days = 0, maxH = 0, otSum = 0, lateN = 0, outSum = 0, outN = 0, incDays = 0
   const d0 = new Date(year, 0, 1)
   for (let i = 0; i < 365; i++) {
     const d = new Date(d0.getTime() + i * 86400000)
@@ -43,7 +39,13 @@ export function History() {
     if (mode === 'income') {
       if (!isWorkday(d, S.holidays) || S.holidays[key] === 1) continue
       if (rec?.leave) continue
-      incSum += seedIncome(key)
+      if (info && info.real) {
+        const stdH = stdMinutes(S.profile) / 60
+        const dp = dailyPay(S.profile, S.payday, d, S.holidays)
+        const rate = stdH > 0 ? dp / stdH : 0
+        incSum += info.h * rate
+        incDays++
+      }
     } else {
       if (!info) continue
       hoursSum += info.h
@@ -63,8 +65,15 @@ export function History() {
     if (!isWorkday(d, S.holidays)) return {}
     if (rec?.leave) return { cls: 'leave', title: `${key} 请假` }
     if (mode === 'income') {
-      const v = seedIncome(key)
-      return { cls: `l${incLevel(v)}`, title: `${key} 收入 ¥${Math.round(v)}` }
+      const info = punchInfo(rec, d, S.profile, S.holidays)
+      if (info && info.real) {
+        const stdH = stdMinutes(S.profile) / 60
+        const dp = dailyPay(S.profile, S.payday, d, S.holidays)
+        const rate = stdH > 0 ? dp / stdH : 0
+        const v = info.h * rate
+        return { cls: `l${incLevel(v, dp)}`, title: `${key} 收入 ${fmt(v)}` }
+      }
+      return {}
     }
     const info = punchInfo(rec, d, S.profile, S.holidays)
     if (!info) return { cls: 'past-empty', title: `${key} 未打卡` }
@@ -103,7 +112,7 @@ export function History() {
         {mode === 'income' ? (
           <>
             <div className="card"><div className="lbl" style={{ color: 'var(--text-2)', fontSize: 13, marginBottom: 8 }}>年累计收入</div><div className="big tnum" style={{ fontSize: 24 }}>{fmt(incSum)}</div></div>
-            <div className="card"><div className="lbl" style={{ color: 'var(--text-2)', fontSize: 13, marginBottom: 8 }}>日均收入</div><div className="big tnum" style={{ fontSize: 24 }}>{fmt(incSum / Math.max(1, days || workdaysSoFar(year, today, S.holidays)))}</div></div>
+            <div className="card"><div className="lbl" style={{ color: 'var(--text-2)', fontSize: 13, marginBottom: 8 }}>日均收入</div><div className="big tnum" style={{ fontSize: 24 }}>{fmt(incSum / Math.max(1, incDays || workdaysSoFar(year, today, S.holidays)))}</div></div>
           </>
         ) : (
           <>
