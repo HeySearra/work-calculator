@@ -222,13 +222,13 @@ export function Settings() {
             </div>
             <div className="fld-row">
               {field('年终奖', 'bonus', 'number')}
+              <label className="fld">
+                <span>年终奖分摊到月薪</span>
+                <select value={f.bonusAmort} onChange={(e) => setField('bonusAmort', e.target.value)}>
+                  <option value="0">不摊</option><option value="1">分摊</option>
+                </select>
+              </label>
             </div>
-            <label className="fld">
-              <span>年终奖分摊到月薪</span>
-              <select value={f.bonusAmort} onChange={(e) => setField('bonusAmort', e.target.value)}>
-                <option value="0">不摊</option><option value="1">分摊</option>
-              </select>
-            </label>
             <div className="fld-row">
               {field('工作日加班倍数', 'otW', 'number', '0.1')}
               {field('周末加班倍数', 'otWe', 'number', '0.1')}
