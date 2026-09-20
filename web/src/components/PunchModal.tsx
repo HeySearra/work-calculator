@@ -1,14 +1,18 @@
 import { useState } from 'react'
 import { Modal } from './Modal'
 import { useStore } from '../store'
+import { todayKey } from '../format'
 
 export function PunchModal({ date, onClose }: { date: string; onClose: () => void }) {
   const S = useStore((s) => s.S)
   const commit = useStore((s) => s.commit)
   const existing = S.punches[date]
+  const isToday = date === todayKey()
+  // 当天的「下班」默认填当前时间（而非规定下班时间）；历史日期仍用规定下班时间
+  const nowHM = `${String(new Date().getHours()).padStart(2, '0')}:${String(new Date().getMinutes()).padStart(2, '0')}`
   const [leave, setLeave] = useState(existing?.leave ? 1 : 0)
   const [inT, setInT] = useState(existing?.in || S.profile.workStart)
-  const [outT, setOutT] = useState(existing?.out || S.profile.workEnd)
+  const [outT, setOutT] = useState(existing?.out || (isToday ? nowHM : S.profile.workEnd))
   const [note, setNote] = useState(existing?.note || '')
 
   async function save() {
