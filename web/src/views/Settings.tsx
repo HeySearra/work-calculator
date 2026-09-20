@@ -216,12 +216,7 @@ export function Settings() {
               </select>
             </label>
             <div className="hint">本月 <b>{pd}</b> 天 · 日薪 <b>{fmt(dp)}</b></div>
-          </div>
-        </div>
-
-        <div className="settings-col">
-          <div className="card">
-            <h3>发薪日</h3>
+            <h3 style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--border-2)' }}>发薪日</h3>
             <div className="fld-row">
               <label className="fld">
                 <span>类型</span>
@@ -242,6 +237,9 @@ export function Settings() {
               {field('金额', 'payAmt', 'number')}
             </div>
           </div>
+        </div>
+
+        <div className="settings-col">
           <div className="card">
             <h3>FIRE</h3>
             <div className="fld-row">
@@ -266,6 +264,18 @@ export function Settings() {
               </select>
             </label>
             <p className="hint">各指数的月度收益率请到「投资」页编辑（一次录入多指数，按需切换）</p>
+          </div>
+          <div className="card">
+            <h3>年度存钱</h3>
+            <div className="fld-row">
+              {field('年度存钱目标', 'svTarget', 'number')}
+              {field('基线打点日', 'svBaseline', 'text')}
+            </div>
+            <label className="fld">
+              <span>起步基线净资产（上一个基线日当天净资产）</span>
+              <CalcInput value={f.svStart} onCommit={(n) => setField('svStart', String(n))} placeholder="如去年 9-01 的净资产" />
+            </label>
+            <div className="hint">每年在基线打点日做资产统计。没历史数据时手动填上一个基线日的净资产；也可在「净资产」页「以今日为起点」打点。</div>
           </div>
         </div>
 
@@ -303,19 +313,6 @@ export function Settings() {
               {field('单位缴费%', 'pnAnnComp', 'number', '0.1')}
               {field('个人缴费%', 'pnAnnPers', 'number', '0.1')}
             </div>
-          </div>
-
-          <div className="card">
-            <h3>年度存钱</h3>
-            <div className="fld-row">
-              {field('年度存钱目标', 'svTarget', 'number')}
-              {field('基线打点日', 'svBaseline', 'text')}
-            </div>
-            <label className="fld">
-              <span>起步基线净资产（上一个基线日当天净资产）</span>
-              <CalcInput value={f.svStart} onCommit={(n) => setField('svStart', String(n))} placeholder="如去年 9-01 的净资产" />
-            </label>
-            <div className="hint">每年在基线打点日做资产统计。没历史数据时手动填上一个基线日的净资产；也可在「净资产」页「以今日为起点」打点。</div>
           </div>
         </div>
       </div>
