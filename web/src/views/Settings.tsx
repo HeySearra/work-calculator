@@ -15,7 +15,7 @@ function applyForm(d: AppState, f: Str) {
   p.workStart = f.workStart; p.workEnd = f.workEnd; p.lunchStart = f.lunchStart; p.lunchEnd = f.lunchEnd
   p.otW = num('otW'); p.otWe = num('otWe'); p.hireDate = f.hireDate
   p.bonus = num('bonus'); p.bonusAmort = f.bonusAmort === '1'; p.unpunchedMode = (f.unpunchedMode as 'standard' | 'off')
-  py.type = (f.payType as 'current_month' | 'next_month'); py.day = num('payDay'); py.rule = (f.payRule as 'advance' | 'delay' | 'same'); py.amount = num('payAmt')
+  py.type = (f.payType as 'current_month' | 'next_month' | 'prev_month'); py.day = num('payDay'); py.rule = (f.payRule as 'advance' | 'delay' | 'same'); py.amount = num('payAmt')
   pn.paidMonths = num('pnPaidMonths'); pn.minMonths = num('pnMinMonths'); pn.paid = pn.paidMonths / 12
   pn.personal = num('pnPers'); pn.wage = num('pnWage'); pn.base = num('pnBase'); pn.idx = num('pnIdx'); pn.rate = num('pnRate'); pn.age = num('pnAge'); pn.birthDate = f.pnBirth
   pn.annBal = num('pnAnnBal'); pn.annCompRate = num('pnAnnComp'); pn.annPersRate = num('pnAnnPers'); pn.province = f.pnProvince
@@ -203,8 +203,9 @@ export function Settings() {
             </label>
             <div className="fld-row">
               <label className="fld">
-                <span>类型</span>
+                <span>发薪月份</span>
                 <select value={f.payType} onChange={(e) => setField('payType', e.target.value)}>
+                  <option value="prev_month">上月发</option>
                   <option value="current_month">当月发</option>
                   <option value="next_month">次月发</option>
                 </select>

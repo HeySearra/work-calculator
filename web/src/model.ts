@@ -19,7 +19,7 @@ export interface Profile {
 }
 
 export interface Payday {
-  type: 'current_month' | 'next_month'
+  type: 'current_month' | 'next_month' | 'prev_month'
   day: number
   rule: 'advance' | 'delay' | 'same'
   amount: number

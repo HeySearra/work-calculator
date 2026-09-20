@@ -176,20 +176,22 @@ export function fmtDur(h: number): string {
 export interface PaydayResult { next: Date; last: Date; daysLeft: number }
 export function computePayday(now: Date, py: Payday): PaydayResult {
   const { type, day, rule } = py
-  let y = now.getFullYear(), m = now.getMonth()
-  const payMonth = type === 'current_month' ? m : m + 1
-  let next = new Date(y, payMonth, Math.min(day, 28), 10, 0, 0)
-  if (next <= now) next = new Date(y, payMonth + 1, Math.min(day, 28), 10, 0, 0)
+  const y = now.getFullYear(), m = now.getMonth()
+  // 发薪月份相对计薪月的偏移：上月发=-1（如 7 月发 8 月工资），当月发=0，次月发=+1
+  const offset = type === 'prev_month' ? -1 : type === 'current_month' ? 0 : 1
+  const d = Math.min(day, 28)
+  // 从「本月+偏移」所在月起步，向后找到未来最近的一个发薪日（避免落在过去）
+  let next = new Date(y, m + offset, d, 10, 0, 0)
+  while (next <= now) next = new Date(next.getFullYear(), next.getMonth() + 1, d, 10, 0, 0)
   if (rule === 'advance') {
     while ([0, 6].includes(next.getDay())) next = new Date(next.getTime() - 86400000)
   } else if (rule === 'delay') {
     while ([0, 6].includes(next.getDay())) next = new Date(next.getTime() + 86400000)
   }
-  // 上一次发薪日：先按 next - 1 month 算；若该日期还在未来（说明当月还没到发薪日），
-  // 说明上上次发薪日才是真正的「上一次」，要再往前推 1 个月
-  let last = new Date(next.getFullYear(), next.getMonth() - 1, Math.min(day, 28), 10, 0, 0)
+  // 上一次发薪：先按 next 往前一个月；若仍落在未来，再往前一个月
+  let last = new Date(next.getFullYear(), next.getMonth() - 1, d, 10, 0, 0)
   if (last > now) {
-    last = new Date(last.getFullYear(), last.getMonth() - 1, Math.min(day, 28), 10, 0, 0)
+    last = new Date(last.getFullYear(), last.getMonth() - 1, d, 10, 0, 0)
   }
   const daysLeft = Math.ceil((next.getTime() - now.getTime()) / 86400000)
   return { next, last, daysLeft }
