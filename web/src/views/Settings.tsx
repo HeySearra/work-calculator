@@ -216,7 +216,6 @@ export function Settings() {
               </select>
             </label>
             <div className="hint">本月 <b>{pd}</b> 天 · 日薪 <b>{fmt(dp)}</b></div>
-            <h3 style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--border-2)' }}>发薪日</h3>
             <div className="fld-row">
               <label className="fld">
                 <span>类型</span>
