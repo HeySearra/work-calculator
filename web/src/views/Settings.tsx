@@ -188,10 +188,6 @@ export function Settings() {
               {field('午休止', 'lunchEnd', 'time')}
             </div>
             <div className="fld-row">
-              {field('工作日加班倍数', 'otW', 'number', '0.1')}
-              {field('周末加班倍数', 'otWe', 'number', '0.1')}
-            </div>
-            <div className="fld-row">
               {field('入职日期', 'hireDate', 'date')}
               {field('年终奖', 'bonus', 'number')}
             </div>
@@ -233,7 +229,11 @@ export function Settings() {
                   <option value="delay">延后发（遇周末顺延到下一个工作日）</option>
                 </select>
               </label>
-              {field('金额', 'payAmt', 'number')}
+              {field('月到手薪资', 'payAmt', 'number')}
+            </div>
+            <div className="fld-row">
+              {field('工作日加班倍数', 'otW', 'number', '0.1')}
+              {field('周末加班倍数', 'otWe', 'number', '0.1')}
             </div>
           </div>
         </div>
