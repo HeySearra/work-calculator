@@ -9,7 +9,12 @@ export function PunchModal({ date, onClose }: { date: string; onClose: () => voi
   const existing = S.punches[date]
   const isToday = date === todayKey()
   // 当天的「下班」默认填当前时间（而非规定下班时间）；历史日期仍用规定下班时间
-  const nowHM = `${String(new Date().getHours()).padStart(2, '0')}:${String(new Date().getMinutes()).padStart(2, '0')}`
+  // 时间统一按 5 分钟取整（与 picker 的 step=300 一致）
+  const nowHM = (() => {
+    const n = new Date()
+    const t = Math.round((n.getHours() * 60 + n.getMinutes()) / 5) * 5
+    return `${String(Math.floor(t / 60) % 24).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`
+  })()
   const [leave, setLeave] = useState(existing?.leave ? 1 : 0)
   const [inT, setInT] = useState(existing?.in || S.profile.workStart)
   const [outT, setOutT] = useState(existing?.out || (isToday ? nowHM : S.profile.workEnd))
@@ -53,11 +58,11 @@ export function PunchModal({ date, onClose }: { date: string; onClose: () => voi
         <div className="row">
           <div className="field">
             <label>上班</label>
-            <input type="time" value={inT} onChange={(e) => setInT(e.target.value)} />
+            <input type="time" step={300} value={inT} onChange={(e) => setInT(e.target.value)} />
           </div>
           <div className="field">
             <label>下班</label>
-            <input type="time" value={outT} onChange={(e) => setOutT(e.target.value)} />
+            <input type="time" step={300} value={outT} onChange={(e) => setOutT(e.target.value)} />
           </div>
         </div>
       )}
