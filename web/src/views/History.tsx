@@ -7,8 +7,11 @@ import { PunchModal } from '../components/PunchModal'
 
 const WK = ['日', '一', '二', '三', '四', '五', '六']
 
-// 收入热力图：按「真实打卡」工时 × 时薪着色，时薪 = 日薪 / 标准工时。
+// 收入热力图：按「真实打卡」收入着色。收入 = 标准工时 × 时薪 + 加班工时 × 时薪 × 工作日加班倍率。
 // 只显示有真实打卡的日子的收入；未打卡 / 无数据日为空白（不造假数据）。
+function dayIncome(h: number, stdH: number, rate: number, otMult: number): number {
+  return Math.min(h, stdH) * rate + Math.max(0, h - stdH) * rate * otMult
+}
 function incLevel(v: number, base: number): number {
   if (base <= 0) return 1
   const r = v / base
@@ -43,7 +46,7 @@ export function History() {
         const stdH = stdMinutes(S.profile) / 60
         const dp = dailyPay(S.profile, S.payday, d, S.holidays)
         const rate = stdH > 0 ? dp / stdH : 0
-        incSum += info.h * rate
+        incSum += dayIncome(info.h, stdH, rate, S.profile.otW)
         incDays++
       }
     } else {
@@ -70,7 +73,7 @@ export function History() {
         const stdH = stdMinutes(S.profile) / 60
         const dp = dailyPay(S.profile, S.payday, d, S.holidays)
         const rate = stdH > 0 ? dp / stdH : 0
-        const v = info.h * rate
+        const v = dayIncome(info.h, stdH, rate, S.profile.otW)
         return { cls: `l${incLevel(v, dp)}`, title: `${key} 收入 ${fmt(v)}` }
       }
       return {}
