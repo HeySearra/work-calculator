@@ -1,7 +1,7 @@
 // 全局状态：Zustand 镜像后端 S，并提供持久化动作
 import { create } from 'zustand'
 import type { AppState } from './model'
-import { DEFAULT, mergeState, computeNet, computeAssets, computeDebts, upsertTrend } from './model'
+import { DEFAULT, mergeState, computeNet, computeAssets, computeDebts, upsertTrend, upsertTrendDaily } from './model'
 import { api, getToken, getUsername, setToken } from './api'
 
 interface Store {
@@ -39,9 +39,15 @@ export const useStore = create<Store>((set, get) => ({
   loadState: async () => {
     const s = await api.getState()
     const merged = mergeState(s)
-    // 校准当前月真实净资产快照（覆盖演示假数据，仅保留真实月份）
+    // 校准当前月 / 当日真实净资产快照（覆盖演示假数据，仅保留真实月份/日期）
     merged.trend = upsertTrend(
       merged.trend,
+      computeNet(merged.accounts),
+      computeAssets(merged.accounts),
+      computeDebts(merged.accounts),
+    )
+    merged.trendDaily = upsertTrendDaily(
+      merged.trendDaily,
       computeNet(merged.accounts),
       computeAssets(merged.accounts),
       computeDebts(merged.accounts),
@@ -60,9 +66,15 @@ export const useStore = create<Store>((set, get) => ({
   commit: async (fn) => {
     const next = structuredClone(get().S)
     fn(next)
-    // 账户变化后，把当前月真实净资产/总资产/总负债写入趋势（同月覆盖，保留历史真实月份）
+    // 账户变化后，把当前月 / 当日真实净资产/总资产/总负债写入趋势（同月/同日覆盖，保留历史真实月份/日期）
     next.trend = upsertTrend(
       next.trend,
+      computeNet(next.accounts),
+      computeAssets(next.accounts),
+      computeDebts(next.accounts),
+    )
+    next.trendDaily = upsertTrendDaily(
+      next.trendDaily,
       computeNet(next.accounts),
       computeAssets(next.accounts),
       computeDebts(next.accounts),

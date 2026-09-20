@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from server.models import InvestRecord, KV, Punch
 
-KV_KEYS = ["user", "profile", "payday", "pension", "fire", "invest", "accounts", "trend", "holidays"]
+KV_KEYS = ["user", "profile", "payday", "pension", "fire", "invest", "accounts", "trend", "trendDaily", "holidays"]
 
 
 def _kv_get(db: Session, uid: int, key: str):

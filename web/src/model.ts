@@ -105,6 +105,14 @@ export interface TrendPoint {
   d?: number  // 当月总负债（可选，旧数据可能没有）
 }
 
+// 每日净资产快照（与 TrendPoint 同结构，粒度更细）
+export interface TrendDayPoint {
+  ymd: string  // "YYYY-MM-DD"
+  v: number
+  a?: number
+  d?: number
+}
+
 // 净资产分组（资产为正、负债为负），用于计算总净资产
 export const ASSET_GROUPS: { key: keyof Accounts; sign: 1 | -1 }[] = [
   { key: 'deposits', sign: 1 },
@@ -152,6 +160,23 @@ export function upsertTrend(trend: TrendPoint[], v: number, a: number, d: number
   return next
 }
 
+// 当前年月日（YYYY-MM-DD）
+export function ymdNow(): string {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+// 把今天的真实净资产 upsert 进每日趋势（同日覆盖，保留历史真实日期）
+export function upsertTrendDaily(trend: TrendDayPoint[], v: number, a: number, d: number): TrendDayPoint[] {
+  const ymd = ymdNow()
+  const next = trend.slice()
+  const idx = next.findIndex((t) => t.ymd === ymd)
+  const point: TrendDayPoint = { ymd, v: Math.round(v), a: Math.round(a), d: Math.round(d) }
+  if (idx >= 0) next[idx] = point
+  else next.push(point)
+  return next
+}
+
 export interface AppState {
   user: User
   profile: Profile
@@ -167,6 +192,7 @@ export interface AppState {
   holidays: Record<string, number>
   accounts: Accounts
   trend: TrendPoint[]
+  trendDaily: TrendDayPoint[]
 }
 
 export const DEFAULT: AppState = {
@@ -222,6 +248,7 @@ export const DEFAULT: AppState = {
     debts: [{ n: '房贷', b: 25420, rate: 3.1, month: 4200, remain: 168 }],
   },
   trend: [],
+  trendDaily: [],
 }
 
 // 合并后端返回（可能只含部分键）与默认值，避免缺字段导致渲染崩溃
@@ -302,5 +329,6 @@ export function mergeState(v: Partial<AppState> | null | undefined): AppState {
     punches: v.punches || {},
     holidays: v.holidays || {},
     trend: v.trend && v.trend.length ? v.trend : DEFAULT.trend,
+    trendDaily: v.trendDaily && v.trendDaily.length ? v.trendDaily : DEFAULT.trendDaily,
   }
 }

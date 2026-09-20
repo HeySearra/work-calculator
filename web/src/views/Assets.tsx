@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useStore } from '../store'
 import { fmt, fmtN, appToday } from '../format'
 import { LineChart } from '../components/Charts'
@@ -17,6 +18,9 @@ export function Assets() {
   const S = useStore((s) => s.S)
   const commit = useStore((s) => s.commit)
 
+  const [gran, setGran] = useState<'day' | 'month' | 'year'>('month')
+  const [selYear, setSelYear] = useState(() => appToday().getFullYear())
+
   const sums: Record<string, number> = {}
   GROUPS.forEach((g) => {
     sums[g.key] = S.accounts[g.key].reduce((a, b) => a + (b.b || 0), 0) * g.sign
@@ -25,13 +29,53 @@ export function Assets() {
   const net = computeNet(S.accounts)
   const posTotal = GROUPS.filter((g) => g.sign > 0).reduce((a, g) => a + sums[g.key], 0)
 
-  // 趋势图
-  const ys = S.trend.map((t) => t.v)
-  const yMin = Math.min(...ys, net) * 0.95
-  const yMax = Math.max(...ys, net) * 1.05
-  const pts = S.trend.map((t, i) => [i, t.v] as [number, number])
-  const step = S.trend.length <= 12 ? 2 : S.trend.length <= 24 ? 3 : 6
-  const xTicks = S.trend.map((t, i) => ({ x: i, text: i % step === 0 ? t.ym.slice(5) : '' }))
+  // 趋势图（按天 / 按月 / 按年 可变粒度）
+  const todayY = appToday().getFullYear()
+  const monthYears = Array.from(new Set(S.trend.map((t) => t.ym.slice(0, 4)))).sort()
+  const dayYears = Array.from(new Set(S.trendDaily.map((t) => t.ymd.slice(0, 4)))).sort()
+  const availYears = gran === 'day' ? dayYears : monthYears
+  const minYear = availYears.length ? Number(availYears[0]) : todayY
+  const maxYear = todayY // 不允许切到未来年
+  const viewYear = Math.min(Math.max(selYear, minYear), maxYear)
+
+  // 按粒度构建数据点（顺序索引，便于 x 轴与悬浮一一对应）
+  let tData: { label: string; v: number; a?: number; d?: number }[] = []
+  if (gran === 'day') {
+    tData = S.trendDaily
+      .filter((t) => t.ymd.startsWith(String(viewYear)))
+      .sort((a, b) => a.ymd.localeCompare(b.ymd))
+      .map((t) => ({ label: t.ymd, v: t.v, a: t.a, d: t.d }))
+  } else if (gran === 'month') {
+    tData = S.trend
+      .filter((t) => t.ym.startsWith(String(viewYear)))
+      .sort((a, b) => a.ym.localeCompare(b.ym))
+      .map((t) => ({ label: t.ym, v: t.v, a: t.a, d: t.d }))
+  } else {
+    // 按年：每年取最后一个有数据的月份（年末净资产）
+    const byYear: Record<string, { ym: string; v: number; a?: number; d?: number }> = {}
+    for (const t of S.trend) {
+      const y = t.ym.slice(0, 4)
+      if (!byYear[y] || t.ym > byYear[y].ym) byYear[y] = t
+    }
+    tData = Object.keys(byYear).sort().map((y) => ({ label: y, v: byYear[y].v, a: byYear[y].a, d: byYear[y].d }))
+  }
+
+  const hasData = tData.length > 0
+  const ys = tData.map((t) => t.v)
+  const allV = hasData ? [...ys, net] : [net]
+  const yMin = Math.min(...allV) * 0.95
+  const yMax = Math.max(...allV) * 1.05
+  const pts = tData.map((t, i) => [i, t.v] as [number, number])
+  const xTicks = tData.map((t, i) => {
+    if (gran === 'day') {
+      const mm = t.label.slice(5, 7)
+      const isFirstOfMonth = t.label.slice(8) === '01'
+      return { x: i, text: isFirstOfMonth ? `${Number(mm)}月` : '' }
+    } else if (gran === 'month') {
+      return { x: i, text: t.label.slice(5) }
+    }
+    return { x: i, text: t.label }
+  })
 
   function setItem(group: keyof Accounts, idx: number, patch: Partial<AccountItem>) {
     commit((d) => {
@@ -161,32 +205,55 @@ export function Assets() {
       </div>
 
       <div className="card" style={{ marginBottom: 14 }}>
-        <h3>资产趋势（历史所有月份）</h3>
-        <LineChart
-          width={1100} height={240}
-          x0={0} x1={S.trend.length - 1}
-          yMin={yMin} yMax={yMax}
-          series={[{ points: pts, color: 'var(--brand)', fill: true }]}
-          xTicks={xTicks}
-          yFormat={(n) => fmtN(n / 10000, 1) + 'w'}
-          tooltip={(x) => {
-            const i = Math.max(0, Math.min(S.trend.length - 1, Math.round(x)))
-            const t = S.trend[i]
-            if (!t) return ''
-            const lines = [`${t.ym}`]
-            lines.push(`净资产 ${fmt(t.v)}`)
-            if (t.a != null) lines.push(`总资产 ${fmt(t.a)}`)
-            if (t.d != null) lines.push(`总负债 ${fmt(t.d)}`)
-            const prev = i > 0 ? S.trend[i - 1] : null
-            if (prev) {
-              const delta = t.v - prev.v
-              lines.push(`较上月 ${delta >= 0 ? '+' : ''}${fmt(delta)}`)
-            } else {
-              lines.push('首月数据')
-            }
-            return lines.join('\n')
-          }}
-        />
+        <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, gap: 8, flexWrap: 'wrap' }}>
+          <div className="row" style={{ gap: 8 }}>
+            <span style={{ fontSize: 13, color: 'var(--text-2)', marginRight: 2 }}>资产趋势</span>
+            <button className={`btn ${gran === 'day' ? 'primary' : 'ghost'}`} onClick={() => setGran('day')}>按天</button>
+            <button className={`btn ${gran === 'month' ? 'primary' : 'ghost'}`} onClick={() => setGran('month')}>按月</button>
+            <button className={`btn ${gran === 'year' ? 'primary' : 'ghost'}`} onClick={() => setGran('year')}>按年</button>
+          </div>
+          {gran !== 'year' ? (
+            <div className="row" style={{ gap: 6 }}>
+              <button className="btn ghost" disabled={viewYear <= minYear} onClick={() => setSelYear(viewYear - 1)}>‹</button>
+              <span className="tnum" style={{ minWidth: 56, textAlign: 'center', fontSize: 13 }}>{viewYear} 年</span>
+              <button className="btn ghost" disabled={viewYear >= maxYear} onClick={() => setSelYear(viewYear + 1)}>›</button>
+            </div>
+          ) : (
+            <span style={{ fontSize: 12, color: 'var(--text-2)' }}>历史所有年份</span>
+          )}
+        </div>
+        {hasData ? (
+          <LineChart
+            width={1100} height={240}
+            x0={0} x1={Math.max(0, tData.length - 1)}
+            yMin={yMin} yMax={yMax}
+            series={[{ points: pts, color: 'var(--brand)', fill: true }]}
+            xTicks={xTicks}
+            yFormat={(n) => fmtN(n / 10000, 1) + 'w'}
+            tooltip={(x) => {
+              const i = Math.max(0, Math.min(tData.length - 1, Math.round(x)))
+              const t = tData[i]
+              if (!t) return ''
+              const lines = [`${t.label}`]
+              lines.push(`净资产 ${fmt(t.v)}`)
+              if (t.a != null) lines.push(`总资产 ${fmt(t.a)}`)
+              if (t.d != null) lines.push(`总负债 ${fmt(t.d)}`)
+              const prevT = i > 0 ? tData[i - 1] : null
+              if (prevT) {
+                const delta = t.v - prevT.v
+                const unit = gran === 'day' ? '较昨日' : gran === 'month' ? '较上月' : '较去年'
+                lines.push(`${unit} ${delta >= 0 ? '+' : ''}${fmt(delta)}`)
+              } else {
+                lines.push(gran === 'year' ? '首年数据' : gran === 'day' ? '首日数据' : '首月数据')
+              }
+              return lines.join('\n')
+            }}
+          />
+        ) : (
+          <div className="hint" style={{ textAlign: 'center', padding: '48px 0' }}>
+            该粒度下暂无数据{gran === 'day' ? '（每日数据从你打开本应用之日起逐日记录）' : ''}
+          </div>
+        )}
       </div>
 
       <div className="grid">
