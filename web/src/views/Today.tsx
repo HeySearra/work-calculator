@@ -3,7 +3,7 @@ import { useStore } from '../store'
 import { appToday, todayKey, fmt, fmtN } from '../format'
 import {
   parseHM, stdMinutes, payDays, workdaysPassed, dailyPay,
-  computePayday, payPeriod, punchInfo,
+  computePayday, payPeriod, punchInfo, isWorkday,
 } from '../calc'
 import { PunchModal } from '../components/PunchModal'
 
@@ -70,9 +70,20 @@ export function Today() {
   const pay = computePayday(now, S.payday)
   const period = payPeriod(now, S.payday, S.payday.amount)
 
-  // 本周 / 本月
-  const dow = (realNow.getDay() + 6) % 7 // 周一=0
-  const weekDone = Math.min(dow + 1, 5)
+  // 本周进度：统计 ISO 周（周一~周日）内的实际工作日，计入法定节假日与调休补班
+  const weekStart = new Date(realNow)
+  weekStart.setDate(realNow.getDate() - ((realNow.getDay() + 6) % 7)) // 回退到本周一
+  weekStart.setHours(0, 0, 0, 0)
+  let weekTotal = 0
+  let weekDone = 0
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(weekStart)
+    d.setDate(weekStart.getDate() + i)
+    if (isWorkday(d, S.holidays)) {
+      weekTotal++
+      if (d.getTime() <= realNow.getTime()) weekDone++ // 已过去的本周工作日
+    }
+  }
   const monthTotal = payDays(now, S.holidays)
   const monthDone = workdaysPassed(now, S.holidays)
   const nextMonthFirst = new Date(now.getFullYear(), now.getMonth() + 1, 1)
@@ -177,7 +188,7 @@ export function Today() {
             <div className="kv-cell">
               <p>本周进度</p>
               <h3 className="tnum">
-                {weekDone}/<span style={{ fontSize: 14, color: 'var(--text-3)', fontWeight: 500 }}>5天</span>
+                {weekDone}/<span style={{ fontSize: 14, color: 'var(--text-3)', fontWeight: 500 }}>{weekTotal}天</span>
               </h3>
             </div>
             <div className="kv-cell">
