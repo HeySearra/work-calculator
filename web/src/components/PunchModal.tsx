@@ -3,6 +3,32 @@ import { Modal } from './Modal'
 import { useStore } from '../store'
 import { todayKey } from '../format'
 
+// 把 HH:MM 拆成 小时/分钟（分钟按 5 分钟向下取整，保证只落在 5 的倍数）
+function splitTime(v: string): { h: number; m: number } {
+  const [hs, ms] = (v || '00:00').split(':')
+  const h = Math.max(0, Math.min(23, Number(hs) || 0))
+  let m = Math.max(0, Math.min(59, Number(ms) || 0))
+  m = Math.floor(m / 5) * 5
+  return { h, m }
+}
+
+// 自定义时间选择器：小时 + 分钟（5 分钟一档）。原生 time input 的下拉不理会 step 的分钟粒度，故自行实现。
+function TimeSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const { h, m } = splitTime(value)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+      <select style={{ flex: 1, minWidth: 0 }} value={String(h)} onChange={(e) => onChange(`${pad(Number(e.target.value))}:${pad(m)}`)}>
+        {Array.from({ length: 24 }, (_, i) => <option key={i} value={i}>{pad(i)}</option>)}
+      </select>
+      <span style={{ flex: '0 0 auto' }}>:</span>
+      <select style={{ flex: 1, minWidth: 0 }} value={String(m)} onChange={(e) => onChange(`${pad(h)}:${pad(Number(e.target.value))}`)}>
+        {Array.from({ length: 12 }, (_, i) => i * 5).map((mm) => <option key={mm} value={mm}>{pad(mm)}</option>)}
+      </select>
+    </div>
+  )
+}
+
 export function PunchModal({ date, onClose }: { date: string; onClose: () => void }) {
   const S = useStore((s) => s.S)
   const commit = useStore((s) => s.commit)
@@ -58,11 +84,11 @@ export function PunchModal({ date, onClose }: { date: string; onClose: () => voi
         <div className="row">
           <div className="field">
             <label>上班</label>
-            <input type="time" step={300} value={inT} onChange={(e) => setInT(e.target.value)} />
+            <TimeSelect value={inT} onChange={setInT} />
           </div>
           <div className="field">
             <label>下班</label>
-            <input type="time" step={300} value={outT} onChange={(e) => setOutT(e.target.value)} />
+            <TimeSelect value={outT} onChange={setOutT} />
           </div>
         </div>
       )}
