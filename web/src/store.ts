@@ -39,7 +39,7 @@ export const useStore = create<Store>((set, get) => ({
   loadState: async () => {
     const s = await api.getState()
     const merged = mergeState(s)
-    // 校准当前月 / 当日真实净资产快照（覆盖演示假数据，仅保留真实月份/日期）
+    // 用当前真实净资产覆盖当月/当日快照（不生成演示数据，仅写真实值）
     merged.trend = upsertTrend(
       merged.trend,
       computeNet(merged.accounts),
