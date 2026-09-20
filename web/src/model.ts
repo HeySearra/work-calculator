@@ -11,7 +11,7 @@ export interface Profile {
   lunchEnd: string
   otW: number
   otWe: number
-  hireDate: string
+  hireDate: string   // 参加工作日期（YYYY-MM-DD；养老页未填出生日期时回退推算年龄用）
   bonus: number
   bonusAmort: boolean
   retireAge: number
@@ -38,7 +38,7 @@ export interface Pension {
   annBal: number      // 企业年金 / 职业年金账户余额
   annCompRate: number // 年金单位缴费比例（%）
   annPersRate: number // 年金个人缴费比例（%）
-  birthDate: string   // 出生日期（YYYY-MM-DD；空表示未设置，回退到按入职日期推算）
+  birthDate: string   // 出生日期（YYYY-MM-DD；空表示未设置，回退到按参加工作日期推算）
   province: string    // 参保省份（用于自动获取养老金计发基数 / 省社平工资）
 }
 

@@ -187,16 +187,6 @@ export function Settings() {
               {field('午休起', 'lunchStart', 'time')}
               {field('午休止', 'lunchEnd', 'time')}
             </div>
-            <div className="fld-row">
-              {field('入职日期', 'hireDate', 'date')}
-              {field('年终奖', 'bonus', 'number')}
-            </div>
-            <label className="fld">
-              <span>年终奖分摊到月薪</span>
-              <select value={f.bonusAmort} onChange={(e) => setField('bonusAmort', e.target.value)}>
-                <option value="0">不摊</option><option value="1">分摊</option>
-              </select>
-            </label>
             <label className="fld">
               <span>节假日（例 10-01* 表示补班，多个用英文逗号分隔）</span>
               <input value={f.holidays} onChange={(e) => setField('holidays', e.target.value)} placeholder="10-01,10-02,10-01*" />
@@ -230,6 +220,15 @@ export function Settings() {
               </label>
               {field('月到手薪资', 'payAmt', 'number')}
             </div>
+            <div className="fld-row">
+              {field('年终奖', 'bonus', 'number')}
+            </div>
+            <label className="fld">
+              <span>年终奖分摊到月薪</span>
+              <select value={f.bonusAmort} onChange={(e) => setField('bonusAmort', e.target.value)}>
+                <option value="0">不摊</option><option value="1">分摊</option>
+              </select>
+            </label>
             <div className="fld-row">
               {field('工作日加班倍数', 'otW', 'number', '0.1')}
               {field('周末加班倍数', 'otWe', 'number', '0.1')}
@@ -290,6 +289,7 @@ export function Settings() {
             <div className="fld-row">
               {field('出生日期', 'pnBirth', 'date')}
               {field('退休年龄', 'pnAge', 'number')}
+              {field('参加工作日期', 'hireDate', 'date')}
               {field('计发指数', 'pnIdx', 'number', '0.01')}
               {field('记账利率%', 'pnRate', 'number', '0.1')}
               {field('养老金计发基数 / 省社平工资', 'pnWage', 'number')}
