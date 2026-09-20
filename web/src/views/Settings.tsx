@@ -211,7 +211,6 @@ export function Settings() {
                 <option value="off">视为当天没上班（未打卡的工作日不计入在司时长）</option>
               </select>
             </label>
-            <div className="hint">本月 <b>{pd}</b> 天 · 日薪 <b>{fmt(dp)}</b></div>
             <div className="fld-row">
               <label className="fld">
                 <span>类型</span>
@@ -235,6 +234,7 @@ export function Settings() {
               {field('工作日加班倍数', 'otW', 'number', '0.1')}
               {field('周末加班倍数', 'otWe', 'number', '0.1')}
             </div>
+            <div className="hint">本月 <b>{pd}</b> 天 · 日薪 <b>{fmt(dp)}</b></div>
           </div>
         </div>
 
