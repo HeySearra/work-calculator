@@ -11,6 +11,7 @@ export interface Profile {
   lunchEnd: string
   otW: number
   otWe: number
+  otH: number
   hireDate: string   // 参加工作日期（YYYY-MM-DD；养老页未填出生日期时回退推算年龄用）
   bonus: number
   bonusAmort: boolean
@@ -204,6 +205,7 @@ export const DEFAULT: AppState = {
     lunchEnd: '13:00',
     otW: 1.5,
     otWe: 2,
+    otH: 3,
     hireDate: '2022-07-01',
     bonus: 50000,
     bonusAmort: false,

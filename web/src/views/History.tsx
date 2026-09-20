@@ -7,10 +7,21 @@ import { PunchModal } from '../components/PunchModal'
 
 const WK = ['日', '一', '二', '三', '四', '五', '六']
 
-// 收入热力图：按「真实打卡」收入着色。收入 = 标准工时 × 时薪 + 加班工时 × 时薪 × 工作日加班倍率。
+// 收入热力图：按「真实打卡」收入着色，收入按日期类型计酬：
+//   工作日（含调休补班）= 标准工时×时薪 + 加班工时×时薪×工作日倍率(otW)
+//   周末（非调休）        = 全部工时×时薪×周末倍率(otWe)
+//   法定节假日            = 全部工时×时薪×节假日倍率(otH)
 // 只显示有真实打卡的日子的收入；未打卡 / 无数据日为空白（不造假数据）。
-function dayIncome(h: number, stdH: number, rate: number, otMult: number): number {
-  return Math.min(h, stdH) * rate + Math.max(0, h - stdH) * rate * otMult
+function dayIncome(
+  h: number, stdH: number, rate: number,
+  d: Date, key: string, holidays: Record<string, number>,
+  otW: number, otWe: number, otH: number,
+): number {
+  const flag = holidays[key]
+  if (flag === 1) return h * rate * otH                              // 法定节假日
+  const w = d.getDay()
+  if ((w === 0 || w === 6) && flag !== 2) return h * rate * otWe     // 周末（非调休）
+  return Math.min(h, stdH) * rate + Math.max(0, h - stdH) * rate * otW // 工作日（含调休补班）
 }
 function incLevel(v: number, base: number): number {
   if (base <= 0) return 1
@@ -40,13 +51,12 @@ export function History() {
     const rec = S.punches[key]
     const info = punchInfo(rec, d, S.profile, S.holidays)
     if (mode === 'income') {
-      if (!isWorkday(d, S.holidays) || S.holidays[key] === 1) continue
       if (rec?.leave) continue
       if (info && info.real) {
         const stdH = stdMinutes(S.profile) / 60
         const dp = dailyPay(S.profile, S.payday, d, S.holidays)
         const rate = stdH > 0 ? dp / stdH : 0
-        incSum += dayIncome(info.h, stdH, rate, S.profile.otW)
+        incSum += dayIncome(info.h, stdH, rate, d, key, S.holidays, S.profile.otW, S.profile.otWe, S.profile.otH)
         incDays++
       }
     } else {
@@ -64,20 +74,25 @@ export function History() {
     const isFuture = d > today
     if (isFuture) return { future: true }
     const rec = S.punches[key]
-    if (S.holidays[key] === 1) return { cls: 'holiday', title: `${key} 法定节假日` }
-    if (!isWorkday(d, S.holidays)) return {}
-    if (rec?.leave) return { cls: 'leave', title: `${key} 请假` }
+
     if (mode === 'income') {
+      if (rec?.leave) return { cls: 'leave', title: `${key} 请假` }
       const info = punchInfo(rec, d, S.profile, S.holidays)
       if (info && info.real) {
         const stdH = stdMinutes(S.profile) / 60
         const dp = dailyPay(S.profile, S.payday, d, S.holidays)
         const rate = stdH > 0 ? dp / stdH : 0
-        const v = dayIncome(info.h, stdH, rate, S.profile.otW)
+        const v = dayIncome(info.h, stdH, rate, d, key, S.holidays, S.profile.otW, S.profile.otWe, S.profile.otH)
         return { cls: `l${incLevel(v, dp)}`, title: `${key} 收入 ${fmt(v)}` }
       }
+      if (S.holidays[key] === 1) return { cls: 'holiday', title: `${key} 法定节假日` }
       return {}
     }
+
+    // 在司时长模式：保持原有行为
+    if (S.holidays[key] === 1) return { cls: 'holiday', title: `${key} 法定节假日` }
+    if (!isWorkday(d, S.holidays)) return {}
+    if (rec?.leave) return { cls: 'leave', title: `${key} 请假` }
     const info = punchInfo(rec, d, S.profile, S.holidays)
     if (!info) return { cls: 'past-empty', title: `${key} 未打卡` }
     return { cls: `l${hoursLevel(info.h)}`, title: `${key} 在司 ${fmtDur(info.h)}` }
