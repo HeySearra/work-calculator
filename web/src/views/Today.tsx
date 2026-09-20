@@ -86,8 +86,24 @@ export function Today() {
   }
   const monthTotal = payDays(now, S.holidays)
   const monthDone = workdaysPassed(now, S.holidays)
-  const nextMonthFirst = new Date(now.getFullYear(), now.getMonth() + 1, 1)
-  const holidayDays = Math.max(0, Math.round((nextMonthFirst.getTime() - now.getTime()) / 86400000))
+  // 距下个假期：今天之后第一个「非工作日」（法定节假日 / 周末都算，调休补班日不算），
+  // 显示之前还要上的班天数（如周日补班 → 21~24 上班，25 放假 → 4 天）
+  let holidayDays = 0
+  {
+    const base = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    for (let i = 1; i <= 14; i++) {
+      const d = new Date(base)
+      d.setDate(base.getDate() + i)
+      if (!isWorkday(d, S.holidays)) {
+        for (let j = 1; j < i; j++) {
+          const w = new Date(base)
+          w.setDate(base.getDate() + j)
+          if (isWorkday(w, S.holidays)) holidayDays++
+        }
+        break
+      }
+    }
+  }
 
   // 今日打卡
   const todayRec = S.punches[todayKey(now)]
