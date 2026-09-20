@@ -113,7 +113,7 @@ export function History() {
         </select>
         <div className="row" style={{ flex: 1, gap: 8 }}>
           <button className={`btn ${mode === 'income' ? 'primary' : 'ghost'}`} onClick={() => setMode('income')}>按收入</button>
-          <button className={`btn ${mode === 'hours' ? 'primary' : 'ghost'}`} onClick={() => setMode('hours')}>按在司时长</button>
+          <button className={`btn ${mode === 'hours' ? 'primary' : 'ghost'}`} onClick={() => setMode('hours')}>按工时</button>
         </div>
       </div>
 

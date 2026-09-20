@@ -12,7 +12,7 @@ import { Settings } from './views/Settings'
 
 const VIEWS = [
   { key: 'today', label: '打工人仪表盘', short: '首页', icon: '🏠', el: Today },
-  { key: 'history', label: '在司时长', short: '在司', icon: '📅', el: History },
+  { key: 'history', label: '考勤', short: '考勤', icon: '📅', el: History },
   { key: 'assets', label: '净资产', short: '净资产', icon: '💰', el: Assets },
   { key: 'pension', label: '养老账户', short: '养老', icon: '🏦', el: Pension },
   { key: 'fire', label: 'FIRE', short: 'FIRE', icon: '🔥', el: Fire },
