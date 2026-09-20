@@ -3,6 +3,7 @@ import { useStore } from '../store'
 import { DEFAULT, mergeState, BENCH_PRESETS, type AppState } from '../model'
 import { fmt, appToday } from '../format'
 import { holidaysToText, textToHolidays, dailyPay, payDays } from '../calc'
+import { CalcInput } from '../components/CalcInput'
 import { api } from '../api'
 
 type Str = { [k: string]: string }
@@ -157,6 +158,14 @@ export function Settings() {
   }
 
   function field(label: string, k: string, type = 'text', step?: string) {
+    if (type === 'number') {
+      return (
+        <label className="fld">
+          <span>{label}</span>
+          <CalcInput value={f[k]} onCommit={(n) => setField(k, String(n))} inputMode="decimal" />
+        </label>
+      )
+    }
     return (
       <label className="fld">
         <span>{label}</span>
@@ -304,7 +313,7 @@ export function Settings() {
             </div>
             <label className="fld">
               <span>起步基线净资产（上一个基线日当天净资产）</span>
-              <input type="number" value={f.svStart} onChange={(e) => setField('svStart', e.target.value)} placeholder="如去年 9-01 的净资产" />
+              <CalcInput value={f.svStart} onCommit={(n) => setField('svStart', String(n))} placeholder="如去年 9-01 的净资产" />
             </label>
             <div className="hint">每年在基线打点日做资产统计。没历史数据时手动填上一个基线日的净资产；也可在「净资产」页「以今日为起点」打点。</div>
           </div>

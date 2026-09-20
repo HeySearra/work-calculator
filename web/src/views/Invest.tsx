@@ -4,6 +4,7 @@ import { fmt } from '../format'
 import { api } from '../api'
 import { computeInvest, computeRating, getNetAssetRange } from '../calc'
 import { LineChart } from '../components/Charts'
+import { CalcInput } from '../components/CalcInput'
 import { BENCH_PRESETS } from '../model'
 
 export function Invest() {
@@ -198,10 +199,10 @@ export function Invest() {
                       <td className="muted tnum">{net.start != null ? fmt(net.start) : '—'}</td>
                       <td className="muted tnum">{net.end != null ? fmt(net.end) : '—'}</td>
                       <td>
-                        <input
-                          type="number" step="0.01"
+                        <CalcInput
                           value={profit == null ? '' : profit}
-                          onChange={(e) => setProfitMonthly(i, e.target.value === '' ? null : Number(e.target.value))}
+                          onCommit={(n) => setProfitMonthly(i, n)}
+                          onEmpty={() => setProfitMonthly(i, null)}
                           className={profit != null && profit > 0 ? 'num up' : profit != null && profit < 0 ? 'num down' : ''}
                           placeholder={hasNet ? '填金额' : '需净资产'}
                         />
@@ -284,17 +285,16 @@ export function Invest() {
                 ))}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(13, minmax(0, 1fr))', gap: 4, marginTop: 2 }}>
-                {Array.from({ length: 52 }).map((_, i) => {
+                  {Array.from({ length: 52 }).map((_, i) => {
                   const profit = S.invest.profitWeekly?.[i] ?? null
                   return (
-                    <input
+                    <CalcInput
                       key={i}
-                      type="number" step="0.01"
                       value={profit == null ? '' : profit}
-                      onChange={(e) => setProfitWeekly(i, e.target.value === '' ? null : Number(e.target.value))}
+                      onCommit={(n) => setProfitWeekly(i, n)}
+                      onEmpty={() => setProfitWeekly(i, null)}
                       className={profit != null && profit > 0 ? 'num up' : profit != null && profit < 0 ? 'num down' : ''}
                       style={{ width: '100%', padding: '4px 2px', textAlign: 'center', fontSize: 11 }}
-                      title={`第 ${i + 1} 周`}
                       placeholder="0"
                     />
                   )
@@ -327,11 +327,10 @@ export function Invest() {
                   <tr key={i}>
                     <td>{i + 1}</td>
                     <td>
-                      <input
-                        type="number" step="0.1"
+                      <CalcInput
                         value={isFuture ? '' : r}
+                        onCommit={(n) => setBenchValue(i, n)}
                         placeholder={isFuture ? '未来月份' : ''}
-                        onChange={(e) => setBenchValue(i, e.target.value === '' ? 0 : Number(e.target.value))}
                       />
                     </td>
                   </tr>

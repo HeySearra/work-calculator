@@ -1,6 +1,7 @@
 import { useStore } from '../store'
 import { fmt, fmtN, appToday } from '../format'
 import { LineChart } from '../components/Charts'
+import { CalcInput } from '../components/CalcInput'
 import { computeNet, type AccountItem, type Accounts } from '../model'
 import { computeSaveTrack } from '../calc'
 
@@ -59,7 +60,7 @@ export function Assets() {
     commit((d) => { d.saveTrack.startNet = computeNet(d.accounts) })
   }
   // 金额为 0 时显示空（避免 number 输入框出现前缀 0）；其他值正常显示
-  const showNum = (n?: number) => (n ? n : '')
+  const showNum = (n?: number) => (n ? String(n) : '')
 
   // 较上月变化：当前值 - 上月趋势值（趋势最后一条为当前月）
   const prev = S.trend.length >= 2 ? S.trend[S.trend.length - 2] : null
@@ -212,20 +213,20 @@ export function Assets() {
                   <div className="fld-row">
                     <label className="fld">
                       <span>金额</span>
-                      <input
-                        type="number"
-                        value={showNum(a.b)}
-                        onChange={(e) => setItem(g.key, idx, { b: Number(e.target.value) })}
+                      <CalcInput
+                        value={a.b}
+                        display={showNum}
+                        onCommit={(n) => setItem(g.key, idx, { b: n })}
                         placeholder="0"
                       />
                     </label>
                     {a.rate != null && (
                       <label className="fld">
                         <span>年利率%</span>
-                        <input
-                          type="number" step="0.1"
-                          value={showNum(a.rate)}
-                          onChange={(e) => setItem(g.key, idx, { rate: Number(e.target.value) })}
+                        <CalcInput
+                          value={a.rate}
+                          display={showNum}
+                          onCommit={(n) => setItem(g.key, idx, { rate: n })}
                           placeholder="0"
                         />
                       </label>
@@ -234,19 +235,19 @@ export function Assets() {
                       <>
                         <label className="fld">
                           <span>月供</span>
-                          <input
-                            type="number"
-                            value={showNum(a.month)}
-                            onChange={(e) => setItem(g.key, idx, { month: Number(e.target.value) })}
+                          <CalcInput
+                            value={a.month}
+                            display={showNum}
+                            onCommit={(n) => setItem(g.key, idx, { month: n })}
                             placeholder="0"
                           />
                         </label>
                         <label className="fld">
                           <span>剩余月数</span>
-                          <input
-                            type="number"
-                            value={showNum(a.remain)}
-                            onChange={(e) => setItem(g.key, idx, { remain: Number(e.target.value) })}
+                          <CalcInput
+                            value={a.remain}
+                            display={showNum}
+                            onCommit={(n) => setItem(g.key, idx, { remain: n })}
                             placeholder="0"
                           />
                         </label>

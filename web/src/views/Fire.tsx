@@ -1,6 +1,7 @@
 import { useStore } from '../store'
 import { fmt, fmtN } from '../format'
 import { LineChart, Ring } from '../components/Charts'
+import { CalcInput } from '../components/CalcInput'
 
 export function Fire() {
   const S = useStore((s) => s.S)
@@ -87,19 +88,19 @@ export function Fire() {
       <div className="grid">
         <div className="card">
           <h3>FIRE 目标</h3>
-          <div className="field"><label>目标本金（¥）</label><input type="number" value={F.target} onChange={(e) => commit((d) => { d.fire.target = Number(e.target.value) })} /></div>
+          <div className="field"><label>目标本金（¥）</label><CalcInput value={F.target} onCommit={(n) => commit((d) => { d.fire.target = n })} /></div>
         </div>
         <div className="card">
           <h3>年支出</h3>
-          <div className="field"><label>年生活支出（¥）</label><input type="number" value={F.spend} onChange={(e) => commit((d) => { d.fire.spend = Number(e.target.value) })} /></div>
+          <div className="field"><label>年生活支出（¥）</label><CalcInput value={F.spend} onCommit={(n) => commit((d) => { d.fire.spend = n })} /></div>
         </div>
         <div className="card">
           <h3>月储蓄</h3>
-          <div className="field"><label>每月储蓄（¥）</label><input type="number" value={F.save} onChange={(e) => commit((d) => { d.fire.save = Number(e.target.value) })} /></div>
+          <div className="field"><label>每月储蓄（¥）</label><CalcInput value={F.save} onCommit={(n) => commit((d) => { d.fire.save = n })} /></div>
         </div>
         <div className="card">
           <h3>投资年化</h3>
-          <div className="field"><label>预期年化（%）</label><input type="number" step="0.5" value={F.rate} onChange={(e) => commit((d) => { d.fire.rate = Number(e.target.value) })} /></div>
+          <div className="field"><label>预期年化（%）</label><CalcInput value={F.rate} onCommit={(n) => commit((d) => { d.fire.rate = n })} /></div>
         </div>
       </div>
     </div>
