@@ -205,18 +205,18 @@ export function Assets() {
       </div>
 
       <div className="card" style={{ marginBottom: 14 }}>
-        <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, gap: 8, flexWrap: 'wrap' }}>
-          <div className="row" style={{ gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 10, flexWrap: 'nowrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ fontSize: 13, color: 'var(--text-2)', marginRight: 2 }}>资产趋势</span>
-            <button className={`btn ${gran === 'day' ? 'primary' : 'ghost'}`} onClick={() => setGran('day')}>按天</button>
-            <button className={`btn ${gran === 'month' ? 'primary' : 'ghost'}`} onClick={() => setGran('month')}>按月</button>
-            <button className={`btn ${gran === 'year' ? 'primary' : 'ghost'}`} onClick={() => setGran('year')}>按年</button>
+            <button className={`btn ${gran === 'day' ? 'primary' : 'ghost'}`} style={{ flex: '0 0 auto', padding: '6px 14px' }} onClick={() => setGran('day')}>按天</button>
+            <button className={`btn ${gran === 'month' ? 'primary' : 'ghost'}`} style={{ flex: '0 0 auto', padding: '6px 14px' }} onClick={() => setGran('month')}>按月</button>
+            <button className={`btn ${gran === 'year' ? 'primary' : 'ghost'}`} style={{ flex: '0 0 auto', padding: '6px 14px' }} onClick={() => setGran('year')}>按年</button>
           </div>
           {gran !== 'year' ? (
-            <div className="row" style={{ gap: 6 }}>
-              <button className="btn ghost" disabled={viewYear <= minYear} onClick={() => setSelYear(viewYear - 1)}>‹</button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <button className="btn ghost" style={{ flex: '0 0 auto', padding: '6px 12px' }} disabled={viewYear <= minYear} onClick={() => setSelYear(viewYear - 1)}>‹</button>
               <span className="tnum" style={{ minWidth: 56, textAlign: 'center', fontSize: 13 }}>{viewYear} 年</span>
-              <button className="btn ghost" disabled={viewYear >= maxYear} onClick={() => setSelYear(viewYear + 1)}>›</button>
+              <button className="btn ghost" style={{ flex: '0 0 auto', padding: '6px 12px' }} disabled={viewYear >= maxYear} onClick={() => setSelYear(viewYear + 1)}>›</button>
             </div>
           ) : (
             <span style={{ fontSize: 12, color: 'var(--text-2)' }}>历史所有年份</span>
