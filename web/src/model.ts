@@ -144,6 +144,11 @@ export function computeDebts(accounts: Accounts): number {
   return (accounts.debts || []).reduce((a, b) => a + (b.b || 0), 0)
 }
 
+// 是否已有任何账户数据（用于避免给全新用户写入空的净资产快照）
+export function hasAccounts(accounts: Accounts): boolean {
+  return ASSET_GROUPS.some((g) => (accounts[g.key] || []).length > 0)
+}
+
 // 当前年月（YYYY-MM）
 export function ymNow(): string {
   const d = new Date()

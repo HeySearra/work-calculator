@@ -1,7 +1,7 @@
 // 全局状态：Zustand 镜像后端 S，并提供持久化动作
 import { create } from 'zustand'
 import type { AppState } from './model'
-import { DEFAULT, mergeState, computeNet, computeAssets, computeDebts, upsertTrend, upsertTrendDaily } from './model'
+import { DEFAULT, mergeState, computeNet, computeAssets, computeDebts, upsertTrend, upsertTrendDaily, hasAccounts } from './model'
 import { api, getToken, getUsername, setToken } from './api'
 
 interface Store {
@@ -39,19 +39,21 @@ export const useStore = create<Store>((set, get) => ({
   loadState: async () => {
     const s = await api.getState()
     const merged = mergeState(s)
-    // 用当前真实净资产覆盖当月/当日快照（不生成演示数据，仅写真实值）
-    merged.trend = upsertTrend(
-      merged.trend,
-      computeNet(merged.accounts),
-      computeAssets(merged.accounts),
-      computeDebts(merged.accounts),
-    )
-    merged.trendDaily = upsertTrendDaily(
-      merged.trendDaily,
-      computeNet(merged.accounts),
-      computeAssets(merged.accounts),
-      computeDebts(merged.accounts),
-    )
+    // 用当前真实净资产覆盖当月/当日快照（不生成演示数据，仅写真实值；账户为空时不写，避免给新用户落 0 快照）
+    if (hasAccounts(merged.accounts)) {
+      merged.trend = upsertTrend(
+        merged.trend,
+        computeNet(merged.accounts),
+        computeAssets(merged.accounts),
+        computeDebts(merged.accounts),
+      )
+      merged.trendDaily = upsertTrendDaily(
+        merged.trendDaily,
+        computeNet(merged.accounts),
+        computeAssets(merged.accounts),
+        computeDebts(merged.accounts),
+      )
+    }
     set({ S: merged, ready: true })
     await api.putState(merged)
   },
@@ -66,19 +68,21 @@ export const useStore = create<Store>((set, get) => ({
   commit: async (fn) => {
     const next = structuredClone(get().S)
     fn(next)
-    // 账户变化后，把当前月 / 当日真实净资产/总资产/总负债写入趋势（同月/同日覆盖，保留历史真实月份/日期）
-    next.trend = upsertTrend(
-      next.trend,
-      computeNet(next.accounts),
-      computeAssets(next.accounts),
-      computeDebts(next.accounts),
-    )
-    next.trendDaily = upsertTrendDaily(
-      next.trendDaily,
-      computeNet(next.accounts),
-      computeAssets(next.accounts),
-      computeDebts(next.accounts),
-    )
+    // 账户变化后，把当前月 / 当日真实净资产/总资产/总负债写入趋势（同月/同日覆盖，保留历史真实月份/日期；账户为空则不写）
+    if (hasAccounts(next.accounts)) {
+      next.trend = upsertTrend(
+        next.trend,
+        computeNet(next.accounts),
+        computeAssets(next.accounts),
+        computeDebts(next.accounts),
+      )
+      next.trendDaily = upsertTrendDaily(
+        next.trendDaily,
+        computeNet(next.accounts),
+        computeAssets(next.accounts),
+        computeDebts(next.accounts),
+      )
+    }
     set({ S: next })
     await api.putState(next)
   },
