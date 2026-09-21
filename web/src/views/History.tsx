@@ -35,7 +35,7 @@ function hoursLevel(h: number): number {
 export function History() {
   const S = useStore((s) => s.S)
   const [year, setYear] = useState(appToday().getFullYear())
-  const [mode, setMode] = useState<'income' | 'hours'>('income')
+  const [mode, setMode] = useState<'income' | 'hours'>('hours')
   const [punchDate, setPunchDate] = useState<string | null>(null)
 
   const today = appToday()
@@ -113,8 +113,8 @@ export function History() {
           {[nowY - 1, nowY, nowY + 1].map((y) => <option key={y} value={y}>{y} 年</option>)}
         </select>
         <div className="row" style={{ flex: 1, gap: 8 }}>
-          <button className={`btn ${mode === 'income' ? 'primary' : 'ghost'}`} onClick={() => setMode('income')}>按收入</button>
           <button className={`btn ${mode === 'hours' ? 'primary' : 'ghost'}`} onClick={() => setMode('hours')}>按工时</button>
+          <button className={`btn ${mode === 'income' ? 'primary' : 'ghost'}`} onClick={() => setMode('income')}>按收入</button>
         </div>
       </div>
 
