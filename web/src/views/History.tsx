@@ -42,7 +42,7 @@ export function History() {
   const nowY = today.getFullYear()
 
   // 全年统计（截至今天）
-  let incSum = 0, hoursSum = 0, days = 0, maxH = 0, otSum = 0, lateN = 0, outSum = 0, outN = 0, incDays = 0
+  let incSum = 0, hoursSum = 0, days = 0, maxH = 0, otSum = 0, lateN = 0, incDays = 0
   const d0 = new Date(year, 0, 1)
   for (let i = 0; i < 365; i++) {
     const d = new Date(d0.getTime() + i * 86400000)
@@ -60,12 +60,12 @@ export function History() {
         incDays++
       }
     } else {
-      if (!info) continue
+      // 只统计真实打卡的日：未打卡（含按默认作息虚构的时长）不计入在司总时长
+      if (!info || !info.real) continue
       hoursSum += info.h
       if (info.h > maxH) maxH = info.h
       otSum += info.ot
       if (info.late > 0) lateN++
-      if (info.real) { outSum += (d.getHours() * 60 + d.getMinutes()); outN++ }
       days++
     }
   }
@@ -94,7 +94,8 @@ export function History() {
     if (!isWorkday(d, S.holidays)) return {}
     if (rec?.leave) return { cls: 'leave', title: `${key} 请假` }
     const info = punchInfo(rec, d, S.profile, S.holidays)
-    if (!info) return { cls: 'past-empty', title: `${key} 未打卡` }
+    // 未打卡（含按默认作息虚构的时长）一律空白，不展示假数据
+    if (!info || !info.real) return { cls: 'past-empty', title: `${key} 未打卡` }
     return { cls: `l${hoursLevel(info.h)}`, title: `${key} 在司 ${fmtDur(info.h)}` }
   }
 
@@ -153,9 +154,9 @@ export function History() {
               <div key={r.key} className="list-item" style={{ cursor: 'pointer' }} onClick={() => setPunchDate(r.key)}>
                 <div>
                   <div className="li-main">{r.label}</div>
-                  <div className="li-sub">{info ? (info.real ? '在司 ' + fmtDur(info.h) : '默认 ' + fmtDur(info.h)) : rec?.leave ? '请假' : '未打卡'}</div>
+                  <div className="li-sub">{info?.real ? '在司 ' + fmtDur(info.h) : rec?.leave ? '请假' : '未打卡'}</div>
                 </div>
-                <div className="li-right">{info ? <span className="tag up">在司</span> : rec?.leave ? <span className="tag amber">请假</span> : <span className="tag">未打卡</span>}</div>
+                <div className="li-right">{info?.real ? <span className="tag up">在司</span> : rec?.leave ? <span className="tag amber">请假</span> : <span className="tag">未打卡</span>}</div>
               </div>
             )
           })}
