@@ -102,7 +102,7 @@ export function History() {
   // 本月明细
   const y = today.getFullYear(), m = today.getMonth()
   const rows: { key: string; label: string }[] = []
-  for (let day = 1; day <= today.getDate(); day++) {
+  for (let day = today.getDate(); day >= 1; day--) {
     rows.push({ key: `${y}-${String(m + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`, label: `${m + 1}月${day}日 周${WK[new Date(y, m, day).getDay()]}` })
   }
 
