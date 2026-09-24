@@ -1,7 +1,7 @@
 """数据访问层：按 user_id 读写整份状态（S 对象）。
 
 状态结构（与原前端 S 对齐）：
-- KV 表：user / profile / payday / pension / fire / invest(配置) / accounts / trend / holidays
+- KV 表：user / profile / payday / pension / fire / invest(配置) / accounts / trend / trendDaily / holidays / saveTrack
 - punches 表：{ 'YYYY-MM-DD': {in,out,leave,note} }
 - invest_records 表：weekly[] / monthly[{y,r}] / yearly{ 'YYYY': {cum} }
 """
@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from server.models import InvestRecord, KV, Punch
 
-KV_KEYS = ["user", "profile", "payday", "pension", "fire", "invest", "accounts", "trend", "trendDaily", "holidays"]
+KV_KEYS = ["user", "profile", "payday", "pension", "fire", "invest", "accounts", "trend", "trendDaily", "holidays", "saveTrack"]
 
 
 def _kv_get(db: Session, uid: int, key: str):

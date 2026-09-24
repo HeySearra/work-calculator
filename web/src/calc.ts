@@ -80,8 +80,11 @@ export function computeSaveTrack(
   const nextBaseline = new Date(prevBaseline.getFullYear() + 1, prevBaseline.getMonth(), prevBaseline.getDate())
   const key = `${prevBaseline.getFullYear()}-${String(prevBaseline.getMonth() + 1).padStart(2, '0')}-${String(prevBaseline.getDate()).padStart(2, '0')}`
 
-  // 起点净资产：优先用历史快照，否则用用户手动填的起步基线值
-  const startNet = snapshots[key] != null && !isNaN(snapshots[key]) ? snapshots[key] : (startNetManual || 0)
+  // 起点净资产：手动基线（起步基线净资产 / 以今日为起点打点）优先于自动基线日快照；
+  // 两者都未设置时回退到 0。即手动设置过则覆盖「基线打卡日」当天的资产统计。
+  const startNet = startNetManual > 0
+    ? startNetManual
+    : (snapshots[key] != null && !isNaN(snapshots[key]) ? snapshots[key] : 0)
 
   const saved = curNet - startNet
   const pct = target > 0 ? saved / target : 0
